@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MedicalBookingAPI.DTOs;
 using MedicalBookingAPI.Services.Interfaces;
@@ -47,5 +49,28 @@ public class AuthController : ControllerBase
         }
 
         return Ok(ApiResponse<AuthResponse>.SuccessResponse(result, "Đăng nhập thành công"));
+    }
+
+    [HttpPut("change-password")]
+    public async Task<ActionResult<ApiResponse<bool>>> ChangePassword([FromBody] ChangePasswordRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ApiResponse<bool>.ErrorResponse("Dữ liệu không hợp lệ"));
+        }
+
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(ApiResponse<bool>.ErrorResponse("Không xác định được người dùng"));
+        }
+
+        var result = await _authService.ChangePasswordAsync(userId, request);
+        if (!result)
+        {
+            return BadRequest(ApiResponse<bool>.ErrorResponse("Mật khẩu cũ không đúng hoặc người dùng không tồn tại"));
+        }
+
+        return Ok(ApiResponse<bool>.SuccessResponse(true, "Đổi mật khẩu thành công"));
     }
 }
