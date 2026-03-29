@@ -42,6 +42,10 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
         return await _dbSet
             .Include(a => a.Patient)
                 .ThenInclude(p => p.User)
+            .Include(a => a.Doctor)
+                .ThenInclude(d => d.User)
+            .Include(a => a.Doctor)
+                .ThenInclude(d => d.Department)
             .Include(a => a.MedicalRecord)
             .Where(a => a.DoctorId == doctorId)
             .OrderByDescending(a => a.AppointmentTime)
@@ -61,6 +65,10 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
         return await _dbSet
             .Include(a => a.Patient)
                 .ThenInclude(p => p.User)
+            .Include(a => a.Doctor)
+                .ThenInclude(d => d.User)
+            .Include(a => a.Doctor)
+                .ThenInclude(d => d.Department)
             .Where(a => a.DoctorId == doctorId && a.AppointmentTime.Date == date.Date)
             .OrderBy(a => a.AppointmentTime)
             .ToListAsync();

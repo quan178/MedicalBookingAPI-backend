@@ -96,4 +96,19 @@ public class MedicalRecordsController : ControllerBase
             return BadRequest(ApiResponse<MedicalRecordDto>.ErrorResponse(ex.Message));
         }
     }
+
+    [HttpPut("{id}")]
+    [Authorize(Roles = "Doctor")]
+    public async Task<ActionResult<ApiResponse<MedicalRecordDto>>> Update(int id, [FromBody] UpdateMedicalRecordRequest request)
+    {
+        try
+        {
+            var record = await _medicalRecordService.UpdateMedicalRecordAsync(id, request);
+            return Ok(ApiResponse<MedicalRecordDto>.SuccessResponse(record, "Cập nhật hồ sơ bệnh án thành công"));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ApiResponse<MedicalRecordDto>.ErrorResponse(ex.Message));
+        }
+    }
 }

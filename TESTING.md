@@ -3,7 +3,7 @@
 > Bộ tài liệu test đầy đủ cho hệ thống API đặt lịch khám bệnh viện
 > ASP.NET Core 8.0 + Entity Framework Core + SQL Server
 > Base URL: `http://localhost:5220`
-> Cập nhật: 2026-03-26
+> Cập nhật: 2026-03-29
 
 ---
 
@@ -186,6 +186,50 @@ Authorization: Bearer <token>
 {
   "success": false,
   "message": "Email hoặc mật khẩu không đúng",
+  "data": null
+}
+```
+
+---
+
+### 4.3 Đổi mật khẩu
+
+**PUT** `/api/Auth/change-password`
+
+#### Auth
+
+`[Authorize]` — Tất cả vai trò đã đăng nhập
+
+#### Request Body
+
+```json
+{
+  "oldPassword": "admin123",
+  "newPassword": "newpassword123"
+}
+```
+
+| Trường | Kiểu | Bắt buộc | Mô tả |
+|--------|------|---------|-------|
+| `oldPassword` | string | ✅ | Mật khẩu cũ |
+| `newPassword` | string | ✅ | Mật khẩu mới (tối thiểu 6 ký tự) |
+
+#### Response 200
+
+```json
+{
+  "success": true,
+  "message": "Đổi mật khẩu thành công",
+  "data": true
+}
+```
+
+#### Response 400 — Mật khẩu cũ không đúng
+
+```json
+{
+  "success": false,
+  "message": "Mật khẩu cũ không đúng hoặc người dùng không tồn tại",
   "data": null
 }
 ```
@@ -729,7 +773,70 @@ Authorization: Bearer <token>
 
 ---
 
-### 7.2 Lấy danh sách tất cả người dùng
+### 7.2 Cập nhật thông tin người dùng hiện tại
+
+**PUT** `/api/Users/me`
+
+#### Auth
+
+`[Authorize]` — Tất cả vai trò đã đăng nhập
+
+#### Request Body
+
+```json
+{
+  "fullName": "Nguyễn Văn B",
+  "phone": "0912345678",
+  "dateOfBirth": "1990-05-20",
+  "gender": "Male",
+  "qualification": "Giáo sư"
+}
+```
+
+| Trường | Kiểu | Bắt buộc | Mô tả |
+|--------|------|---------|-------|
+| `fullName` | string | ❌ | Họ tên mới |
+| `phone` | string | ❌ | Số điện thoại mới |
+| `dateOfBirth` | datetime | ❌ | Ngày sinh mới (format: `YYYY-MM-DD`) |
+| `gender` | string | ❌ | Giới tính mới |
+| `qualification` | string | ❌ | Bằng cấp (chỉ áp dụng cho Doctor) |
+
+#### Response 200
+
+```json
+{
+  "success": true,
+  "message": "Cập nhật hồ sơ thành công",
+  "data": {
+    "userId": 3,
+    "fullName": "Nguyễn Văn B",
+    "email": "patient1",
+    "phone": "0912345678",
+    "role": "Patient",
+    "createdAt": "2026-03-25T13:38:01",
+    "patient": {
+      "patientId": 1,
+      "dateOfBirth": "1990-05-20T00:00:00",
+      "gender": "Male"
+    },
+    "doctor": null
+  }
+}
+```
+
+#### Response 404
+
+```json
+{
+  "success": false,
+  "message": "Người dùng không tồn tại",
+  "data": null
+}
+```
+
+---
+
+### 7.3 Lấy danh sách tất cả người dùng
 
 **GET** `/api/Users`
 
@@ -766,7 +873,7 @@ Authorization: Bearer <token>
 
 ---
 
-### 7.3 Lấy thông tin người dùng theo ID
+### 7.4 Lấy thông tin người dùng theo ID
 
 **GET** `/api/Users/{id}`
 
@@ -815,7 +922,7 @@ Authorization: Bearer <token>
 
 ---
 
-### 7.4 Xóa người dùng
+### 7.5 Xóa người dùng
 
 **DELETE** `/api/Users/{id}`
 
@@ -1215,10 +1322,12 @@ GET /api/Appointments/doctor/schedule?date=2026-03-26
       "medicalRecordId": 1,
       "appointmentId": 1,
       "appointmentTime": "2026-03-26T09:00:00",
+      "patientName": "Patient One",
       "doctorName": "Dr. John Smith",
       "departmentName": "Khoa Nội tổng hợp",
       "doctorDiagnosis": "Cảm cúm nhẹ",
       "treatment": "Nghỉ ngơi, uống nhiều nước, uống thuốc hạ sốt",
+      "prescription": "Paracetamol 500mg x 2 viên/ngày, uống sau ăn",
       "createdAt": "2026-03-26T10:00:00"
     }
   ]
@@ -1246,10 +1355,12 @@ GET /api/Appointments/doctor/schedule?date=2026-03-26
       "medicalRecordId": 1,
       "appointmentId": 1,
       "appointmentTime": "2026-03-26T09:00:00",
+      "patientName": "Patient One",
       "doctorName": "Dr. John Smith",
       "departmentName": "Khoa Nội tổng hợp",
       "doctorDiagnosis": "Cảm cúm nhẹ",
       "treatment": "Nghỉ ngơi, uống nhiều nước, uống thuốc hạ sốt",
+      "prescription": "Paracetamol 500mg x 2 viên/ngày, uống sau ăn",
       "createdAt": "2026-03-26T10:00:00"
     }
   ]
@@ -1282,10 +1393,12 @@ GET /api/Appointments/doctor/schedule?date=2026-03-26
     "medicalRecordId": 1,
     "appointmentId": 1,
     "appointmentTime": "2026-03-26T09:00:00",
+    "patientName": "Patient One",
     "doctorName": "Dr. John Smith",
     "departmentName": "Khoa Nội tổng hợp",
     "doctorDiagnosis": "Cảm cúm nhẹ",
     "treatment": "Nghỉ ngơi, uống nhiều nước, uống thuốc hạ sốt",
+    "prescription": "Paracetamol 500mg x 2 viên/ngày, uống sau ăn",
     "createdAt": "2026-03-26T10:00:00"
   }
 }
@@ -1317,7 +1430,8 @@ GET /api/Appointments/doctor/schedule?date=2026-03-26
 {
   "appointmentId": 1,
   "doctorDiagnosis": "Cảm cúm nhẹ",
-  "treatment": "Nghỉ ngơi, uống nhiều nước, uống thuốc hạ sốt trong 3 ngày"
+  "treatment": "Nghỉ ngơi, uống nhiều nước, uống thuốc hạ sốt trong 3 ngày",
+  "prescription": "Paracetamol 500mg x 2 viên/ngày, uống sau ăn"
 }
 ```
 
@@ -1326,6 +1440,7 @@ GET /api/Appointments/doctor/schedule?date=2026-03-26
 | `appointmentId` | int | ✅ | ID lịch hẹn đã hoàn thành |
 | `doctorDiagnosis` | string | ❌ | Chẩn đoán của bác sĩ |
 | `treatment` | string | ❌ | Phương pháp điều trị |
+| `prescription` | string | ❌ | Đơn thuốc / toa thuốc |
 
 #### Response 200
 
@@ -1337,10 +1452,12 @@ GET /api/Appointments/doctor/schedule?date=2026-03-26
     "medicalRecordId": 3,
     "appointmentId": 1,
     "appointmentTime": "2026-03-26T09:00:00",
+    "patientName": "Patient One",
     "doctorName": "Dr. John Smith",
     "departmentName": "Khoa Nội tổng hợp",
     "doctorDiagnosis": "Cảm cúm nhẹ",
     "treatment": "Nghỉ ngơi, uống nhiều nước, uống thuốc hạ sốt trong 3 ngày",
+    "prescription": "Paracetamol 500mg x 2 viên/ngày, uống sau ăn",
     "createdAt": "2026-03-26T10:00:00"
   }
 }
@@ -1352,6 +1469,69 @@ GET /api/Appointments/doctor/schedule?date=2026-03-26
 {
   "success": false,
   "message": "Lịch hẹn không tồn tại hoặc không thuộc về bác sĩ này",
+  "data": null
+}
+```
+
+---
+
+### 9.5 Cập nhật hồ sơ bệnh án
+
+**PUT** `/api/MedicalRecords/{id}`
+
+#### Auth
+
+`[Authorize(Roles = "Doctor")]`
+
+#### Path Parameters
+
+| Tham số | Kiểu | Mô tả |
+|---------|------|-------|
+| `id` | int | ID hồ sơ bệnh án |
+
+#### Request Body
+
+```json
+{
+  "doctorDiagnosis": "Cảm cúm nhẹ (cập nhật)",
+  "treatment": "Nghỉ ngơi, uống nhiều nước, bổ sung vitamin C",
+  "prescription": "Paracetamol 500mg x 3 viên/ngày, Vitamin C 500mg x 1 viên/ngày"
+}
+```
+
+| Trường | Kiểu | Bắt buộc | Mô tả |
+|--------|------|---------|-------|
+| `doctorDiagnosis` | string | ❌ | Chẩn đoán mới |
+| `treatment` | string | ❌ | Phương pháp điều trị mới |
+| `prescription` | string | ❌ | Đơn thuốc mới |
+
+#### Response 200
+
+```json
+{
+  "success": true,
+  "message": "Cập nhật hồ sơ bệnh án thành công",
+  "data": {
+    "medicalRecordId": 1,
+    "appointmentId": 1,
+    "appointmentTime": "2026-03-26T09:00:00",
+    "patientName": "Patient One",
+    "doctorName": "Dr. John Smith",
+    "departmentName": "Khoa Nội tổng hợp",
+    "doctorDiagnosis": "Cảm cúm nhẹ (cập nhật)",
+    "treatment": "Nghỉ ngơi, uống nhiều nước, bổ sung vitamin C",
+    "prescription": "Paracetamol 500mg x 3 viên/ngày, Vitamin C 500mg x 1 viên/ngày",
+    "createdAt": "2026-03-26T10:00:00"
+  }
+}
+```
+
+#### Response 400
+
+```json
+{
+  "success": false,
+  "message": "Hồ sơ bệnh án không tồn tại hoặc không thuộc về bác sĩ này",
   "data": null
 }
 ```
@@ -1394,7 +1574,14 @@ Invoke-RestMethod -Uri "http://localhost:5220/api/Users/me" `
     -Method GET `
     -Headers @{ "Authorization" = "Bearer $token" }
 
-# 5. Tạo lịch hẹn mới (Patient)
+# 5. Cập nhật hồ sơ cá nhân
+Invoke-RestMethod -Uri "http://localhost:5220/api/Users/me" `
+    -Method PUT `
+    -ContentType "application/json" `
+    -Headers @{ "Authorization" = "Bearer $token" } `
+    -Body '{"fullName":"Nguyễn Văn B","phone":"0912345678"}'
+
+# 6. Tạo lịch hẹn mới (Patient)
 Invoke-RestMethod -Uri "http://localhost:5220/api/Appointments" `
     -Method POST `
     -ContentType "application/json" `
@@ -1423,17 +1610,29 @@ TOKEN="<token>"
 curl http://localhost:5220/api/Users/me \
   -H "Authorization: Bearer $TOKEN"
 
-# 5. Tạo lịch hẹn (Patient)
+# 5. Cập nhật hồ sơ cá nhân
+curl -X PUT http://localhost:5220/api/Users/me \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"fullName":"Nguyễn Văn B","phone":"0912345678"}'
+
+# 6. Tạo lịch hẹn (Patient)
 curl -X POST http://localhost:5220/api/Appointments \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{"doctorId":1,"appointmentTime":"2026-03-27T10:00:00"}'
 
-# 6. Tạo hồ sơ bệnh án (Doctor)
+# 7. Tạo hồ sơ bệnh án (Doctor)
 curl -X POST http://localhost:5220/api/MedicalRecords \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
-  -d '{"appointmentId":1,"doctorDiagnosis":"Cảm cúm","treatment":"Nghỉ ngơi"}'
+  -d '{"appointmentId":1,"doctorDiagnosis":"Cảm cúm","treatment":"Nghỉ ngơi","prescription":"Paracetamol 500mg"}'
+
+# 8. Cập nhật hồ sơ bệnh án (Doctor)
+curl -X PUT http://localhost:5220/api/MedicalRecords/1 \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"doctorDiagnosis":"Cảm cúm (cập nhật)","treatment":"Nghỉ ngơi, bổ sung vitamin"}'
 ```
 
 ---
@@ -1445,38 +1644,41 @@ curl -X POST http://localhost:5220/api/MedicalRecords \
 | | | **Auth** | | |
 | 1 | POST | `/api/Auth/register` | ❌ | — |
 | 2 | POST | `/api/Auth/login` | ❌ | — |
+| 3 | PUT | `/api/Auth/change-password` | ✅ | Tất cả |
 | | | **Departments** | | |
-| 3 | GET | `/api/Departments` | ❌ | Công khai |
-| 4 | GET | `/api/Departments/{id}` | ❌ | Công khai |
-| 5 | POST | `/api/Departments` | ✅ | Admin |
-| 6 | PUT | `/api/Departments/{id}` | ✅ | Admin |
-| 7 | DELETE | `/api/Departments/{id}` | ✅ | Admin |
+| 4 | GET | `/api/Departments` | ❌ | Công khai |
+| 5 | GET | `/api/Departments/{id}` | ❌ | Công khai |
+| 6 | POST | `/api/Departments` | ✅ | Admin |
+| 7 | PUT | `/api/Departments/{id}` | ✅ | Admin |
+| 8 | DELETE | `/api/Departments/{id}` | ✅ | Admin |
 | | | **Doctors** | | |
-| 8 | GET | `/api/Doctors` | ❌ | Công khai |
-| 9 | GET | `/api/Doctors/{id}` | ❌ | Công khai |
-| 10 | GET | `/api/Doctors/department/{departmentId}` | ❌ | Công khai |
-| 11 | POST | `/api/Doctors` | ✅ | Admin |
-| 12 | PUT | `/api/Doctors/{id}` | ✅ | Admin |
-| 13 | PUT | `/api/Doctors/{id}/department` | ✅ | Admin |
+| 9 | GET | `/api/Doctors` | ❌ | Công khai |
+| 10 | GET | `/api/Doctors/{id}` | ❌ | Công khai |
+| 11 | GET | `/api/Doctors/department/{departmentId}` | ❌ | Công khai |
+| 12 | POST | `/api/Doctors` | ✅ | Admin |
+| 13 | PUT | `/api/Doctors/{id}` | ✅ | Admin |
+| 14 | PUT | `/api/Doctors/{id}/department` | ✅ | Admin |
 | | | **Users** | | |
-| 14 | GET | `/api/Users/me` | ✅ | Tất cả |
-| 15 | GET | `/api/Users` | ✅ | Admin |
-| 16 | GET | `/api/Users/{id}` | ✅ | Admin |
-| 17 | DELETE | `/api/Users/{id}` | ✅ | Admin |
+| 15 | GET | `/api/Users/me` | ✅ | Tất cả |
+| 16 | PUT | `/api/Users/me` | ✅ | Tất cả |
+| 17 | GET | `/api/Users` | ✅ | Admin |
+| 18 | GET | `/api/Users/{id}` | ✅ | Admin |
+| 19 | DELETE | `/api/Users/{id}` | ✅ | Admin |
 | | | **Appointments** | | |
-| 18 | GET | `/api/Appointments/patient` | ✅ | Patient |
-| 19 | GET | `/api/Appointments/doctor` | ✅ | Doctor |
-| 20 | GET | `/api/Appointments/doctor/schedule?date=` | ✅ | Doctor |
-| 21 | GET | `/api/Appointments/{id}` | ✅ | Tất cả |
-| 22 | POST | `/api/Appointments` | ✅ | Patient |
-| 23 | PUT | `/api/Appointments/{id}/status` | ✅ | Doctor |
-| 24 | DELETE | `/api/Appointments/{id}` | ✅ | Patient |
+| 20 | GET | `/api/Appointments/patient` | ✅ | Patient |
+| 21 | GET | `/api/Appointments/doctor` | ✅ | Doctor |
+| 22 | GET | `/api/Appointments/doctor/schedule?date=` | ✅ | Doctor |
+| 23 | GET | `/api/Appointments/{id}` | ✅ | Tất cả |
+| 24 | POST | `/api/Appointments` | ✅ | Patient |
+| 25 | PUT | `/api/Appointments/{id}/status` | ✅ | Doctor |
+| 26 | DELETE | `/api/Appointments/{id}` | ✅ | Patient |
 | | | **MedicalRecords** | | |
-| 25 | GET | `/api/MedicalRecords/patient` | ✅ | Patient |
-| 26 | GET | `/api/MedicalRecords/doctor` | ✅ | Doctor |
-| 27 | GET | `/api/MedicalRecords/{id}` | ✅ | Tất cả |
-| 28 | POST | `/api/MedicalRecords` | ✅ | Doctor |
+| 27 | GET | `/api/MedicalRecords/patient` | ✅ | Patient |
+| 28 | GET | `/api/MedicalRecords/doctor` | ✅ | Doctor |
+| 29 | GET | `/api/MedicalRecords/{id}` | ✅ | Tất cả |
+| 30 | POST | `/api/MedicalRecords` | ✅ | Doctor |
+| 31 | PUT | `/api/MedicalRecords/{id}` | ✅ | Doctor |
 
 ---
 
-*Document này được tạo tự động dựa trên mã nguồn API. Cập nhật khi có thay đổi về endpoints.*
+*Tài liệu này được tạo tự động dựa trên mã nguồn API. Cập nhật khi có thay đổi về endpoints.*

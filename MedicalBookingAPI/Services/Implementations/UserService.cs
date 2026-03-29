@@ -7,10 +7,17 @@ namespace MedicalBookingAPI.Services.Implementations;
 public class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
+    private readonly IPatientRepository _patientRepository;
+    private readonly IDoctorRepository _doctorRepository;
 
-    public UserService(IUserRepository userRepository)
+    public UserService(
+        IUserRepository userRepository,
+        IPatientRepository patientRepository,
+        IDoctorRepository doctorRepository)
     {
         _userRepository = userRepository;
+        _patientRepository = patientRepository;
+        _doctorRepository = doctorRepository;
     }
 
     public async Task<IEnumerable<UserDto>> GetAllUsersAsync()
@@ -34,6 +41,35 @@ public class UserService : IUserService
 
         await _userRepository.DeleteAsync(id);
         return true;
+    }
+
+    public async Task<UserDetailDto?> UpdateUserAsync(int userId, UpdateUserRequest request)
+    {
+        var user = await _userRepository.GetUserWithDetailsAsync(userId);
+        if (user == null) return null;
+
+        if (!string.IsNullOrWhiteSpace(request.FullName))
+            user.FullName = request.FullName;
+        if (request.Phone != null)
+            user.Phone = request.Phone;
+
+        if (user.Patient != null)
+        {
+            if (request.DateOfBirth.HasValue)
+                user.Patient.DateOfBirth = request.DateOfBirth;
+            if (request.Gender != null)
+                user.Patient.Gender = request.Gender;
+        }
+
+        if (user.Doctor != null)
+        {
+            if (request.Qualification != null)
+                user.Doctor.Qualification = request.Qualification;
+        }
+
+        await _userRepository.UpdateAsync(user);
+
+        return MapToUserDetailDto(user);
     }
 
     private static UserDto MapToUserDto(Entities.User user)

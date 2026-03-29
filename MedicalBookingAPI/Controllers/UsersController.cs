@@ -69,4 +69,22 @@ public class UsersController : ControllerBase
 
         return Ok(ApiResponse<UserDetailDto>.SuccessResponse(user));
     }
+
+    [HttpPut("me")]
+    public async Task<ActionResult<ApiResponse<UserDetailDto>>> UpdateCurrentUser([FromBody] UpdateUserRequest request)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(ApiResponse<UserDetailDto>.ErrorResponse("Thông tin người dùng không hợp lệ"));
+        }
+
+        var user = await _userService.UpdateUserAsync(userId, request);
+        if (user == null)
+        {
+            return NotFound(ApiResponse<UserDetailDto>.ErrorResponse("Người dùng không tồn tại"));
+        }
+
+        return Ok(ApiResponse<UserDetailDto>.SuccessResponse(user, "Cập nhật hồ sơ thành công"));
+    }
 }
