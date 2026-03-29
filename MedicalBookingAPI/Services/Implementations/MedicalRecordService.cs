@@ -63,6 +63,7 @@ public class MedicalRecordService : IMedicalRecordService
             AppointmentId = request.AppointmentId,
             DoctorDiagnosis = request.DoctorDiagnosis,
             Treatment = request.Treatment,
+            Prescription = request.Prescription,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -94,6 +95,26 @@ public class MedicalRecordService : IMedicalRecordService
         return records;
     }
 
+    public async Task<MedicalRecordDto> UpdateMedicalRecordAsync(int id, UpdateMedicalRecordRequest request)
+    {
+        var record = await _medicalRecordRepository.GetByIdAsync(id);
+        if (record == null)
+        {
+            throw new InvalidOperationException("Hồ sơ bệnh án không tồn tại");
+        }
+
+        if (request.DoctorDiagnosis != null)
+            record.DoctorDiagnosis = request.DoctorDiagnosis;
+        if (request.Treatment != null)
+            record.Treatment = request.Treatment;
+        if (request.Prescription != null)
+            record.Prescription = request.Prescription;
+
+        await _medicalRecordRepository.UpdateAsync(record);
+
+        return MapToDto(record);
+    }
+
     private static MedicalRecordDto MapToDto(MedicalRecord record)
     {
         return new MedicalRecordDto
@@ -101,10 +122,12 @@ public class MedicalRecordService : IMedicalRecordService
             MedicalRecordId = record.MedicalRecordId,
             AppointmentId = record.AppointmentId,
             AppointmentTime = record.Appointment?.AppointmentTime ?? DateTime.MinValue,
+            PatientName = record.Appointment?.Patient?.User?.FullName ?? string.Empty,
             DoctorName = record.Appointment?.Doctor?.User?.FullName ?? string.Empty,
             DepartmentName = record.Appointment?.Doctor?.Department?.DepartmentName ?? string.Empty,
             DoctorDiagnosis = record.DoctorDiagnosis,
             Treatment = record.Treatment,
+            Prescription = record.Prescription,
             CreatedAt = record.CreatedAt
         };
     }

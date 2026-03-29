@@ -30,6 +30,9 @@ public class MedicalRecordRepository : GenericRepository<MedicalRecord>, IMedica
     {
         return await _dbSet
             .Include(m => m.Appointment)
+                .ThenInclude(a => a.Patient)
+                    .ThenInclude(p => p.User)
+            .Include(m => m.Appointment)
                 .ThenInclude(a => a.Doctor)
                     .ThenInclude(d => d.User)
             .Include(m => m.Appointment)
