@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -149,9 +149,16 @@ namespace MedicalBookingAPI.Migrations
                 columns: new[] { "DepartmentId", "DepartmentName", "Description" },
                 values: new object[,]
                 {
-                    { 1, "Nội khoa", "Internal Medicine Department" },
-                    { 2, "Da liễu", "Dermatology Department" },
-                    { 3, "Tim mạch", "Cardiology Department" }
+                    { 1,  "Tim mạch",        "Khoa Tim mạch - Chẩn đoán và điều trị các bệnh lý tim mạch" },
+                    { 2,  "Thần kinh",       "Khoa Thần kinh - Điều trị các bệnh lý thần kinh và não bộ" },
+                    { 3,  "Tiêu hóa",         "Khoa Tiêu hóa - Điều trị các bệnh lý đường tiêu hóa" },
+                    { 4,  "Hô hấp",           "Khoa Hô hấp - Điều trị các bệnh lý đường hô hấp" },
+                    { 5,  "Tai mũi họng",     "Khoa Tai mũi họng - Điều trị các bệnh lý tai, mũi, họng" },
+                    { 6,  "Da liễu",           "Khoa Da liễu - Điều trị các bệnh lý da và các bệnh lây truyền qua đường tình dục" },
+                    { 7,  "Cơ xương khớp",     "Khoa Cơ xương khớp - Điều trị các bệnh lý cơ, xương, khớp" },
+                    { 8,  "Nội tổng quát",    "Khoa Nội tổng quát - Khám và điều trị các bệnh nội khoa tổng hợp" },
+                    { 9,  "Nhi khoa",          "Khoa Nhi khoa - Chăm sóc sức khỏe trẻ em từ sơ sinh đến 15 tuổi" },
+                    { 10, "Sản phụ khoa",      "Khoa Sản phụ khoa - Chăm sóc sức khỏe phụ nữ và sinh sản" }
                 });
 
             migrationBuilder.InsertData(

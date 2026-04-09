@@ -94,6 +94,7 @@ public class AppDbContext : DbContext
             entity.HasKey(m => m.MedicalRecordId);
             entity.Property(m => m.DoctorDiagnosis).HasMaxLength(2000);
             entity.Property(m => m.Treatment).HasMaxLength(2000);
+            entity.Property(m => m.Prescription).HasColumnType("nvarchar(max)");
             entity.Property(m => m.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
 
             entity.HasOne(m => m.Appointment)
@@ -110,9 +111,16 @@ public class AppDbContext : DbContext
     private static void SeedData(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Department>().HasData(
-            new Department { DepartmentId = 1, DepartmentName = "Nội khoa", Description = "Internal Medicine Department" },
-            new Department { DepartmentId = 2, DepartmentName = "Da liễu", Description = "Dermatology Department" },
-            new Department { DepartmentId = 3, DepartmentName = "Tim mạch", Description = "Cardiology Department" }
+            new Department { DepartmentId = 1,  DepartmentName = "Tim mạch",        Description = "Khoa Tim mạch - Chẩn đoán và điều trị các bệnh lý tim mạch" },
+            new Department { DepartmentId = 2,  DepartmentName = "Thần kinh",       Description = "Khoa Thần kinh - Điều trị các bệnh lý thần kinh và não bộ" },
+            new Department { DepartmentId = 3,  DepartmentName = "Tiêu hóa",         Description = "Khoa Tiêu hóa - Điều trị các bệnh lý đường tiêu hóa" },
+            new Department { DepartmentId = 4,  DepartmentName = "Hô hấp",           Description = "Khoa Hô hấp - Điều trị các bệnh lý đường hô hấp" },
+            new Department { DepartmentId = 5,  DepartmentName = "Tai mũi họng",     Description = "Khoa Tai mũi họng - Điều trị các bệnh lý tai, mũi, họng" },
+            new Department { DepartmentId = 6,  DepartmentName = "Da liễu",           Description = "Khoa Da liễu - Điều trị các bệnh lý da và các bệnh lây truyền qua đường tình dục" },
+            new Department { DepartmentId = 7,  DepartmentName = "Cơ xương khớp",     Description = "Khoa Cơ xương khớp - Điều trị các bệnh lý cơ, xương, khớp" },
+            new Department { DepartmentId = 8,  DepartmentName = "Nội tổng quát",    Description = "Khoa Nội tổng quát - Khám và điều trị các bệnh nội khoa tổng hợp" },
+            new Department { DepartmentId = 9,  DepartmentName = "Nhi khoa",          Description = "Khoa Nhi khoa - Chăm sóc sức khỏe trẻ em từ sơ sinh đến 15 tuổi" },
+            new Department { DepartmentId = 10, DepartmentName = "Sản phụ khoa",      Description = "Khoa Sản phụ khoa - Chăm sóc sức khỏe phụ nữ và sinh sản" }
         );
 
         modelBuilder.Entity<User>().HasData(

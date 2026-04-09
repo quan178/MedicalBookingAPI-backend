@@ -84,20 +84,62 @@ namespace MedicalBookingAPI.Migrations
                         new
                         {
                             DepartmentId = 1,
-                            DepartmentName = "Nội khoa",
-                            Description = "Internal Medicine Department"
+                            DepartmentName = "Tim mạch",
+                            Description = "Khoa Tim mạch - Chẩn đoán và điều trị các bệnh lý tim mạch"
                         },
                         new
                         {
                             DepartmentId = 2,
-                            DepartmentName = "Da liễu",
-                            Description = "Dermatology Department"
+                            DepartmentName = "Thần kinh",
+                            Description = "Khoa Thần kinh - Điều trị các bệnh lý thần kinh và não bộ"
                         },
                         new
                         {
                             DepartmentId = 3,
-                            DepartmentName = "Tim mạch",
-                            Description = "Cardiology Department"
+                            DepartmentName = "Tiêu hóa",
+                            Description = "Khoa Tiêu hóa - Điều trị các bệnh lý đường tiêu hóa"
+                        },
+                        new
+                        {
+                            DepartmentId = 4,
+                            DepartmentName = "Hô hấp",
+                            Description = "Khoa Hô hấp - Điều trị các bệnh lý đường hô hấp"
+                        },
+                        new
+                        {
+                            DepartmentId = 5,
+                            DepartmentName = "Tai mũi họng",
+                            Description = "Khoa Tai mũi họng - Điều trị các bệnh lý tai, mũi, họng"
+                        },
+                        new
+                        {
+                            DepartmentId = 6,
+                            DepartmentName = "Da liễu",
+                            Description = "Khoa Da liễu - Điều trị các bệnh lý da và các bệnh lây truyền qua đường tình dục"
+                        },
+                        new
+                        {
+                            DepartmentId = 7,
+                            DepartmentName = "Cơ xương khớp",
+                            Description = "Khoa Cơ xương khớp - Điều trị các bệnh lý cơ, xương, khớp"
+                        },
+                        new
+                        {
+                            DepartmentId = 8,
+                            DepartmentName = "Nội tổng quát",
+                            Description = "Khoa Nội tổng quát - Khám và điều trị các bệnh nội khoa tổng hợp"
+                        },
+                        new
+                        {
+                            DepartmentId = 9,
+                            DepartmentName = "Nhi khoa",
+                            Description = "Khoa Nhi khoa - Chăm sóc sức khỏe trẻ em từ sơ sinh đến 15 tuổi"
+                        },
+                        new
+                        {
+                            DepartmentId = 10,
+                            DepartmentName = "Sản phụ khoa",
+                            Description = "Khoa Sản phụ khoa - Chăm sóc sức khỏe phụ nữ và sinh sản"
                         });
                 });
 
@@ -256,7 +298,7 @@ namespace MedicalBookingAPI.Migrations
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "admin@medical.com",
                             FullName = "Quản trị viên",
-                            PasswordHash = "$2a$11$Q9DFtMde0uOe0WoGKB5EGOM1XXRULd/dpMi7AE500sSuWZ949..OO",
+                            PasswordHash = "$2a$11$P8U93igOYHagj91dHEXW4ev7FS0742kYUdin69Xx.jOng3ATszagC",
                             Phone = "1234567890",
                             Role = "Admin"
                         },
@@ -266,7 +308,7 @@ namespace MedicalBookingAPI.Migrations
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "doctor@medical.com",
                             FullName = "Bác sĩ Trương",
-                            PasswordHash = "$2a$11$tqFgqaG5cyGDaS/YSnd3IOTboByZN2mbSZ91a22yEktWkj5Q7hbg.",
+                            PasswordHash = "$2a$11$LywSnU/stisjWCB.Nko3bubrraBHtdIMmxrPRMgdGzzXPI4BBu1Hq",
                             Phone = "9876543210",
                             Role = "Doctor"
                         },
@@ -276,7 +318,7 @@ namespace MedicalBookingAPI.Migrations
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "patient@medical.com",
                             FullName = "Đỗ Minh Quân",
-                            PasswordHash = "$2a$11$0Eksse0HzOW/8EbOMgr5zu1giwYYenwpxmF93hBSs3qpwctrqE3Dy",
+                            PasswordHash = "$2a$11$Bfy7mFlEdyemUrsz91dHT./3HxJM3IvcAE9xo7s1xavClQ0mAqsP6",
                             Phone = "0123456789",
                             Role = "Patient"
                         });
