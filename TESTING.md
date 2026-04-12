@@ -3,7 +3,7 @@
 > Bộ tài liệu test đầy đủ cho hệ thống API đặt lịch khám bệnh viện
 > ASP.NET Core 8.0 + Entity Framework Core + SQL Server
 > Base URL: `http://localhost:5220`
-> Cập nhật: 2026-03-29
+> Cập nhật: 2026-04-12
 
 ---
 
@@ -19,6 +19,7 @@
 8. [API Lịch hẹn — Appointments](#8-api-lịch-hẹn--appointments)
 9. [API Hồ sơ bệnh án — Medical Records](#9-api-hồ-sơ-bệnh-án--medical-records)
 10. [Danh sách HTTP Status Codes](#10-danh-sách-http-status-codes)
+11. [API AI Chat — AI Chat](#11-api-ai-chat--ai-chat)
 
 ---
 
@@ -1538,7 +1539,277 @@ GET /api/Appointments/doctor/schedule?date=2026-03-26
 
 ---
 
-## 10. Danh sách HTTP Status Codes
+## 10. API AI Chat — AI Chat
+
+> **Base**: `/api/AI/chat`
+> **Auth**: Yêu cầu đăng nhập (Patient)
+
+---
+
+### Trạng thái phiên trò chuyện
+
+| Giá trị | Mô tả |
+|---------|-------|
+| `Active` | Phiên đang hoạt động |
+| `Ended` | Phiên đã kết thúc |
+
+---
+
+### 10.1 Tạo phiên trò chuyện mới
+
+**POST** `/api/AI/chat/sessions`
+
+#### Auth
+
+`[Authorize(Roles = "Patient")]`
+
+#### Response 200
+
+```json
+{
+  "success": true,
+  "message": "Tạo phiên trò chuyện thành công",
+  "data": {
+    "session": {
+      "chatSessionId": "cs_a1b2c3d4e5f6",
+      "createdAt": "2026-04-12T10:00:00",
+      "updatedAt": "2026-04-12T10:00:00",
+      "messageCount": 0,
+      "status": "Active",
+      "endedAt": null
+    },
+    "messages": []
+  }
+}
+```
+
+#### Response 400
+
+```json
+{
+  "success": false,
+  "message": "Không tìm thấy thông tin bệnh nhân",
+  "data": null
+}
+```
+
+---
+
+### 10.2 Lấy danh sách phiên trò chuyện
+
+**GET** `/api/AI/chat/sessions`
+
+#### Auth
+
+`[Authorize(Roles = "Patient")]`
+
+#### Response 200
+
+```json
+{
+  "success": true,
+  "message": "Thao tác thành công",
+  "data": [
+    {
+      "chatSessionId": "cs_a1b2c3d4e5f6",
+      "createdAt": "2026-04-12T10:00:00",
+      "updatedAt": "2026-04-12T10:30:00",
+      "messageCount": 5,
+      "status": "Active",
+      "endedAt": null
+    },
+    {
+      "chatSessionId": "cs_x9y8z7w6v5u",
+      "createdAt": "2026-04-10T14:00:00",
+      "updatedAt": "2026-04-10T14:45:00",
+      "messageCount": 8,
+      "status": "Ended",
+      "endedAt": "2026-04-10T14:45:00"
+    }
+  ]
+}
+```
+
+---
+
+### 10.3 Lấy lịch sử trò chuyện
+
+**GET** `/api/AI/chat/sessions/{sessionId}`
+
+#### Auth
+
+`[Authorize(Roles = "Patient")]`
+
+#### Path Parameters
+
+| Tham số | Kiểu | Mô tả |
+|---------|------|-------|
+| `sessionId` | string | ID phiên trò chuyện |
+
+#### Response 200
+
+```json
+{
+  "success": true,
+  "message": "Thao tác thành công",
+  "data": {
+    "chatSessionId": "cs_a1b2c3d4e5f6",
+    "createdAt": "2026-04-12T10:00:00",
+    "updatedAt": "2026-04-12T10:30:00",
+    "messages": [
+      {
+        "chatMessageId": 1,
+        "sender": "User",
+        "content": "Tôi bị đau đầu và sốt nhẹ",
+        "suggestedSpecialty": null,
+        "confidenceScore": null,
+        "createdAt": "2026-04-12T10:00:30"
+      },
+      {
+        "chatMessageId": 2,
+        "sender": "Assistant",
+        "content": "Dựa trên triệu chứng bạn mô tả, tôi khuyên bạn nên đăng ký khám tại Khoa Nội tổng hợp để được khám và tư vấn chi tiết hơn.",
+        "suggestedSpecialty": "Khoa Nội tổng hợp",
+        "confidenceScore": 0.85,
+        "createdAt": "2026-04-12T10:00:35"
+      }
+    ]
+  }
+}
+```
+
+#### Response 404
+
+```json
+{
+  "success": false,
+  "message": "Phiên trò chuyện không tồn tại hoặc bạn không có quyền truy cập",
+  "data": null
+}
+```
+
+---
+
+### 10.4 Gửi tin nhắn
+
+**POST** `/api/AI/chat/sessions/{sessionId}/message`
+
+#### Auth
+
+`[Authorize(Roles = "Patient")]`
+
+#### Path Parameters
+
+| Tham số | Kiểu | Mô tả |
+|---------|------|-------|
+| `sessionId` | string | ID phiên trò chuyện |
+
+#### Request Body
+
+```json
+{
+  "content": "Tôi bị đau đầu và sốt nhẹ"
+}
+```
+
+| Trường | Kiểu | Bắt buộc | Mô tả |
+|--------|------|---------|-------|
+| `content` | string | ✅ | Nội dung tin nhắn (1-2000 ký tự) |
+
+#### Response 200
+
+```json
+{
+  "success": true,
+  "message": "Thao tác thành công",
+  "data": {
+    "userMessage": {
+      "chatMessageId": 3,
+      "sender": "User",
+      "content": "Tôi bị đau đầu và sốt nhẹ",
+      "suggestedSpecialty": null,
+      "confidenceScore": null,
+      "createdAt": "2026-04-12T10:30:00"
+    },
+    "assistantMessage": {
+      "chatMessageId": 4,
+      "sender": "Assistant",
+      "content": "Dựa trên triệu chứng bạn mô tả, tôi khuyên bạn nên đăng ký khám tại Khoa Nội tổng hợp để được khám và tư vấn chi tiết hơn.",
+      "suggestedSpecialty": "Khoa Nội tổng hợp",
+      "confidenceScore": 0.85,
+      "createdAt": "2026-04-12T10:30:05"
+    },
+    "session": {
+      "chatSessionId": "cs_a1b2c3d4e5f6",
+      "createdAt": "2026-04-12T10:00:00",
+      "updatedAt": "2026-04-12T10:30:05",
+      "messageCount": 4,
+      "status": "Active",
+      "endedAt": null
+    }
+  }
+}
+```
+
+#### Response 400 — Tin nhắn không hợp lệ
+
+```json
+{
+  "success": false,
+  "message": "Nội dung tin nhắn không hợp lệ",
+  "data": null
+}
+```
+
+#### Response 404
+
+```json
+{
+  "success": false,
+  "message": "Phiên trò chuyện không tồn tại",
+  "data": null
+}
+```
+
+---
+
+### 10.5 Xóa phiên trò chuyện
+
+**DELETE** `/api/AI/chat/sessions/{sessionId}`
+
+#### Auth
+
+`[Authorize(Roles = "Patient")]`
+
+#### Path Parameters
+
+| Tham số | Kiểu | Mô tả |
+|---------|------|-------|
+| `sessionId` | string | ID phiên trò chuyện |
+
+#### Response 200
+
+```json
+{
+  "success": true,
+  "message": "Xóa phiên trò chuyện thành công",
+  "data": null
+}
+```
+
+#### Response 404
+
+```json
+{
+  "success": false,
+  "message": "Phiên trò chuyện không tồn tại hoặc bạn không có quyền xóa",
+  "data": null
+}
+```
+
+---
+
+## 11. Danh sách HTTP Status Codes
 
 | Status Code | Mô tả |
 |-------------|-------|
@@ -1678,6 +1949,12 @@ curl -X PUT http://localhost:5220/api/MedicalRecords/1 \
 | 29 | GET | `/api/MedicalRecords/{id}` | ✅ | Tất cả |
 | 30 | POST | `/api/MedicalRecords` | ✅ | Doctor |
 | 31 | PUT | `/api/MedicalRecords/{id}` | ✅ | Doctor |
+| | | **AI Chat** | | |
+| 32 | POST | `/api/AI/chat/sessions` | ✅ | Patient |
+| 33 | GET | `/api/AI/chat/sessions` | ✅ | Patient |
+| 34 | GET | `/api/AI/chat/sessions/{sessionId}` | ✅ | Patient |
+| 35 | POST | `/api/AI/chat/sessions/{sessionId}/message` | ✅ | Patient |
+| 36 | DELETE | `/api/AI/chat/sessions/{sessionId}` | ✅ | Patient |
 
 ---
 

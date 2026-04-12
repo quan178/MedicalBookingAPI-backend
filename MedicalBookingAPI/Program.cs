@@ -47,6 +47,8 @@ builder.Services.AddScoped<IDoctorRepository, DoctorRepository>();
 builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
 builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
 builder.Services.AddScoped<IMedicalRecordRepository, MedicalRecordRepository>();
+builder.Services.AddScoped<IChatSessionRepository, ChatSessionRepository>();
+builder.Services.AddScoped<IChatMessageRepository, ChatMessageRepository>();
 
 // Register Services
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -55,9 +57,26 @@ builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<IDoctorService, DoctorService>();
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 builder.Services.AddScoped<IMedicalRecordService, MedicalRecordService>();
+builder.Services.AddScoped<IChatService, ChatService>();
 
 // Register Helpers
 builder.Services.AddSingleton<IJwtHelper, JwtHelper>();
+
+// Register Encryption Service
+builder.Services.AddSingleton<IChatEncryptionService, ChatEncryptionService>();
+
+// Register Chat Settings
+builder.Services.Configure<ChatSettings>(builder.Configuration.GetSection("ChatSettings"));
+
+// Register Chat Cleanup Background Service
+builder.Services.AddHostedService<ChatSessionCleanupService>();
+
+// Register HttpClient for Beeknoee AI
+builder.Services.AddHttpClient("BeeknoeeClient", client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(120);
+    client.DefaultRequestHeaders.Add("User-Agent", "MedicalBookingAPI/1.0");
+});
 
 // Add Controllers
 builder.Services.AddControllers();
@@ -131,11 +150,11 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// Initialize database and seed data
-using (var scope = app.Services.CreateScope())
-{
-    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    dbContext.Database.Migrate();
-}
+// Initialize database and seed data (Disabled for manual migration control)
+// using (var scope = app.Services.CreateScope())
+// {
+//     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+//     dbContext.Database.Migrate();
+// }
 
 app.Run();

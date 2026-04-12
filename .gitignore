@@ -114,6 +114,7 @@ LocalDB/
 .env
 .env.*
 appsettings.*.local.json
+appsettings.Development.json
 
 # OS generated files
 .DS_Store

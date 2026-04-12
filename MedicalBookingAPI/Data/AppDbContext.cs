@@ -16,6 +16,8 @@ public class AppDbContext : DbContext
     public DbSet<Department> Departments => Set<Department>();
     public DbSet<Appointment> Appointments => Set<Appointment>();
     public DbSet<MedicalRecord> MedicalRecords => Set<MedicalRecord>();
+    public DbSet<ChatSession> ChatSessions => Set<ChatSession>();
+    public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -105,7 +107,30 @@ public class AppDbContext : DbContext
             entity.HasIndex(m => m.AppointmentId).IsUnique();
         });
 
-        SeedData(modelBuilder);
+        modelBuilder.Entity<ChatSession>(entity =>
+        {
+            entity.Property(s => s.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            entity.Property(s => s.UpdatedAt).HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasOne(s => s.Patient)
+                  .WithMany()
+                  .HasForeignKey(s => s.PatientId)
+                  .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<ChatMessage>(entity =>
+        {
+            entity.Property(m => m.Content).IsRequired().HasColumnType("nvarchar(max)");
+            entity.Property(m => m.Sender).IsRequired().HasConversion<string>();
+            entity.Property(m => m.SuggestedSpecialty).HasMaxLength(100);
+            entity.Property(m => m.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            entity.Property(m => m.IsEncrypted).HasDefaultValue(false);
+
+            entity.HasOne(m => m.ChatSession)
+                  .WithMany(s => s.Messages)
+                  .HasForeignKey(m => m.ChatSessionId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
     }
 
     private static void SeedData(ModelBuilder modelBuilder)
