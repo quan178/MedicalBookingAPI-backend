@@ -13,6 +13,7 @@ public class MedicalRecordDto
     public string? DoctorDiagnosis { get; set; }
     public string? Treatment { get; set; }
     public string? Prescription { get; set; }
+    public bool IsEncrypted { get; set; }
     public DateTime CreatedAt { get; set; }
 }
 

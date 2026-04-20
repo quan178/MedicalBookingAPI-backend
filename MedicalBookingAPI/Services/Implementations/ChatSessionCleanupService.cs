@@ -1,6 +1,7 @@
 using MedicalBookingAPI.Enums;
+using MedicalBookingAPI.Helpers;
 using MedicalBookingAPI.Repositories.Interfaces;
-using MedicalBookingAPI.Services.Implementations;
+using MedicalBookingAPI.Services.Interfaces;
 using Microsoft.Extensions.Options;
 
 namespace MedicalBookingAPI.Services.Implementations;
@@ -57,7 +58,7 @@ public class ChatSessionCleanupService : BackgroundService
         foreach (var session in expiredList)
         {
             session.Status = ChatSessionStatus.Ended;
-            session.EndedAt = DateTime.UtcNow;
+            session.EndedAt = DateTimeHelper.Now;
             await repository.UpdateAsync(session);
 
             _logger.LogInformation(

@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using MedicalBookingAPI.Helpers;
 
 namespace MedicalBookingAPI.Entities;
 
@@ -17,7 +18,7 @@ public class User
     public string PasswordHash { get; set; } = string.Empty;
     public string? Phone { get; set; }
     public UserRole Role { get; set; }
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = DateTimeHelper.Now;
 
     // Navigation properties
     public Patient? Patient { get; set; }

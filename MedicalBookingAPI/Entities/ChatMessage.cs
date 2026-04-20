@@ -1,6 +1,7 @@
 namespace MedicalBookingAPI.Entities;
 
 using System.Text.Json.Serialization;
+using MedicalBookingAPI.Helpers;
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum MessageSender
@@ -18,7 +19,7 @@ public class ChatMessage
     public bool IsEncrypted { get; set; } = false;
     public string? SuggestedSpecialty { get; set; }
     public double? ConfidenceScore { get; set; }
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = DateTimeHelper.Now;
 
     // Navigation property
     public ChatSession ChatSession { get; set; } = null!;

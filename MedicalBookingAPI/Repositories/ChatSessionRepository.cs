@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using MedicalBookingAPI.Data;
 using MedicalBookingAPI.Entities;
 using MedicalBookingAPI.Enums;
+using MedicalBookingAPI.Helpers;
 using MedicalBookingAPI.Repositories.Interfaces;
 
 namespace MedicalBookingAPI.Repositories;
@@ -56,7 +57,7 @@ public class ChatSessionRepository : GenericRepository<ChatSession>, IChatSessio
 
     public override async Task UpdateAsync(ChatSession entity)
     {
-        entity.UpdatedAt = DateTime.UtcNow;
+        entity.UpdatedAt = DateTimeHelper.Now;
         await base.UpdateAsync(entity);
     }
 
@@ -67,7 +68,7 @@ public class ChatSessionRepository : GenericRepository<ChatSession>, IChatSessio
 
     public async Task<IEnumerable<ChatSession>> GetExpiredSessionsAsync(int timeoutMinutes)
     {
-        var threshold = DateTime.UtcNow.AddMinutes(-timeoutMinutes);
+        var threshold = DateTimeHelper.Now.AddMinutes(-timeoutMinutes);
         return await _dbSet
             .Where(s => s.Status == ChatSessionStatus.Active && s.UpdatedAt < threshold)
             .ToListAsync();

@@ -1,4 +1,5 @@
 using MedicalBookingAPI.Enums;
+using MedicalBookingAPI.Helpers;
 
 namespace MedicalBookingAPI.Entities;
 
@@ -6,8 +7,8 @@ public class ChatSession
 {
     public string ChatSessionId { get; set; } = string.Empty;
     public int? PatientId { get; set; }
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = DateTimeHelper.Now;
+    public DateTime UpdatedAt { get; set; } = DateTimeHelper.Now;
     public ChatSessionStatus Status { get; set; } = ChatSessionStatus.Active;
     public DateTime? EndedAt { get; set; }
 

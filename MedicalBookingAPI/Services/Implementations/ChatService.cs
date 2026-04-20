@@ -4,6 +4,7 @@ using MedicalBookingAPI.Data;
 using MedicalBookingAPI.DTOs;
 using MedicalBookingAPI.Entities;
 using MedicalBookingAPI.Enums;
+using MedicalBookingAPI.Helpers;
 using MedicalBookingAPI.Repositories.Interfaces;
 using MedicalBookingAPI.Services.Interfaces;
 using Microsoft.Extensions.Options;
@@ -110,8 +111,8 @@ LUÔN LUÔN:
         {
             PatientId = patientId,
             ChatSessionId = $"chat_{Guid.NewGuid():N}",
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            CreatedAt = DateTimeHelper.Now,
+            UpdatedAt = DateTimeHelper.Now
         };
 
         await _sessionRepository.AddAsync(session);
@@ -187,8 +188,8 @@ LUÔN LUÔN:
             {
                 PatientId = patientId,
                 ChatSessionId = $"chat_{Guid.NewGuid():N}",
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                CreatedAt = DateTimeHelper.Now,
+                UpdatedAt = DateTimeHelper.Now
             };
             await _sessionRepository.AddAsync(session);
         }
@@ -199,11 +200,11 @@ LUÔN LUÔN:
             Sender = MessageSender.User,
             Content = _encryptionService.Encrypt(request.Content),
             IsEncrypted = true,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTimeHelper.Now
         };
         await _messageRepository.AddAsync(userMessage);
 
-        session.UpdatedAt = DateTime.UtcNow;
+        session.UpdatedAt = DateTimeHelper.Now;
         await _sessionRepository.UpdateAsync(session);
 
         var assistantResponse = await GetAssistantResponseAsync(session.ChatSessionId);
@@ -216,11 +217,11 @@ LUÔN LUÔN:
             IsEncrypted = true,
             SuggestedSpecialty = assistantResponse.SuggestedSpecialty,
             ConfidenceScore = assistantResponse.ConfidenceScore,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTimeHelper.Now
         };
         await _messageRepository.AddAsync(assistantMessage);
 
-        session.UpdatedAt = DateTime.UtcNow;
+        session.UpdatedAt = DateTimeHelper.Now;
         await _sessionRepository.UpdateAsync(session);
 
         await _dbContext.SaveChangesAsync();
@@ -288,7 +289,7 @@ LUÔN LUÔN:
             return true;
 
         session.Status = ChatSessionStatus.Ended;
-        session.EndedAt = DateTime.UtcNow;
+        session.EndedAt = DateTimeHelper.Now;
         await _sessionRepository.UpdateAsync(session);
         return true;
     }

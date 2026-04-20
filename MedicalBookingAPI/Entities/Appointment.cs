@@ -1,3 +1,5 @@
+using MedicalBookingAPI.Helpers;
+
 namespace MedicalBookingAPI.Entities;
 
 using System.Text.Json.Serialization;
@@ -18,7 +20,7 @@ public class Appointment
     public int DoctorId { get; set; }
     public DateTime AppointmentTime { get; set; }
     public AppointmentStatus Status { get; set; } = AppointmentStatus.Pending;
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = DateTimeHelper.Now;
 
     // Navigation properties
     public Patient Patient { get; set; } = null!;

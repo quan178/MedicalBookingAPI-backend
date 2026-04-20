@@ -1,6 +1,7 @@
 using MedicalBookingAPI.Data;
 using MedicalBookingAPI.DTOs;
 using MedicalBookingAPI.Entities;
+using MedicalBookingAPI.Helpers;
 using MedicalBookingAPI.Repositories.Interfaces;
 using MedicalBookingAPI.Services.Interfaces;
 
@@ -11,15 +12,18 @@ public class MedicalRecordService : IMedicalRecordService
     private readonly IMedicalRecordRepository _medicalRecordRepository;
     private readonly IAppointmentRepository _appointmentRepository;
     private readonly IDoctorRepository _doctorRepository;
+    private readonly IChatEncryptionService _encryptionService;
 
     public MedicalRecordService(
         IMedicalRecordRepository medicalRecordRepository,
         IAppointmentRepository appointmentRepository,
-        IDoctorRepository doctorRepository)
+        IDoctorRepository doctorRepository,
+        IChatEncryptionService encryptionService)
     {
         _medicalRecordRepository = medicalRecordRepository;
         _appointmentRepository = appointmentRepository;
         _doctorRepository = doctorRepository;
+        _encryptionService = encryptionService;
     }
 
     public async Task<IEnumerable<MedicalRecordDto>> GetMedicalRecordsByPatientAsync(int patientId)
@@ -61,10 +65,17 @@ public class MedicalRecordService : IMedicalRecordService
         var medicalRecord = new MedicalRecord
         {
             AppointmentId = request.AppointmentId,
-            DoctorDiagnosis = request.DoctorDiagnosis,
-            Treatment = request.Treatment,
-            Prescription = request.Prescription,
-            CreatedAt = DateTime.UtcNow
+            DoctorDiagnosis = request.DoctorDiagnosis != null
+                ? _encryptionService.Encrypt(request.DoctorDiagnosis)
+                : null,
+            Treatment = request.Treatment != null
+                ? _encryptionService.Encrypt(request.Treatment)
+                : null,
+            Prescription = request.Prescription != null
+                ? _encryptionService.Encrypt(request.Prescription)
+                : null,
+            IsEncrypted = true,
+            CreatedAt = DateTimeHelper.Now
         };
 
         await _medicalRecordRepository.AddAsync(medicalRecord);
@@ -104,18 +115,20 @@ public class MedicalRecordService : IMedicalRecordService
         }
 
         if (request.DoctorDiagnosis != null)
-            record.DoctorDiagnosis = request.DoctorDiagnosis;
+            record.DoctorDiagnosis = _encryptionService.Encrypt(request.DoctorDiagnosis);
         if (request.Treatment != null)
-            record.Treatment = request.Treatment;
+            record.Treatment = _encryptionService.Encrypt(request.Treatment);
         if (request.Prescription != null)
-            record.Prescription = request.Prescription;
+            record.Prescription = _encryptionService.Encrypt(request.Prescription);
+
+        record.IsEncrypted = true;
 
         await _medicalRecordRepository.UpdateAsync(record);
 
         return MapToDto(record);
     }
 
-    private static MedicalRecordDto MapToDto(MedicalRecord record)
+    private MedicalRecordDto MapToDto(MedicalRecord record)
     {
         return new MedicalRecordDto
         {
@@ -125,9 +138,16 @@ public class MedicalRecordService : IMedicalRecordService
             PatientName = record.Appointment?.Patient?.User?.FullName ?? string.Empty,
             DoctorName = record.Appointment?.Doctor?.User?.FullName ?? string.Empty,
             DepartmentName = record.Appointment?.Doctor?.Department?.DepartmentName ?? string.Empty,
-            DoctorDiagnosis = record.DoctorDiagnosis,
-            Treatment = record.Treatment,
-            Prescription = record.Prescription,
+            DoctorDiagnosis = record.IsEncrypted && record.DoctorDiagnosis != null
+                ? _encryptionService.Decrypt(record.DoctorDiagnosis)
+                : record.DoctorDiagnosis,
+            Treatment = record.IsEncrypted && record.Treatment != null
+                ? _encryptionService.Decrypt(record.Treatment)
+                : record.Treatment,
+            Prescription = record.IsEncrypted && record.Prescription != null
+                ? _encryptionService.Decrypt(record.Prescription)
+                : record.Prescription,
+            IsEncrypted = record.IsEncrypted,
             CreatedAt = record.CreatedAt
         };
     }

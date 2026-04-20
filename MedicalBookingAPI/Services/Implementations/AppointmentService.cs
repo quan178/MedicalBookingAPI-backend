@@ -1,6 +1,7 @@
 using MedicalBookingAPI.Data;
 using MedicalBookingAPI.DTOs;
 using MedicalBookingAPI.Entities;
+using MedicalBookingAPI.Helpers;
 using MedicalBookingAPI.Repositories.Interfaces;
 using MedicalBookingAPI.Services.Interfaces;
 
@@ -42,7 +43,7 @@ public class AppointmentService : IAppointmentService
 
     public async Task<AppointmentDto> CreateAppointmentAsync(int patientId, CreateAppointmentRequest request)
     {
-        if (request.AppointmentTime <= DateTime.UtcNow)
+        if (request.AppointmentTime <= DateTimeHelper.Now)
         {
             throw new InvalidOperationException("Thời gian hẹn phải là thời gian trong tương lai");
         }
@@ -64,7 +65,7 @@ public class AppointmentService : IAppointmentService
             DoctorId = request.DoctorId,
             AppointmentTime = request.AppointmentTime,
             Status = AppointmentStatus.Pending,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTimeHelper.Now
         };
 
         await _appointmentRepository.AddAsync(appointment);

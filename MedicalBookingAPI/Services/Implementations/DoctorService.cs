@@ -71,7 +71,7 @@ public class DoctorService : IDoctorService
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
             Phone = request.Phone,
             Role = UserRole.Doctor,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTimeHelper.Now
         };
 
         await _userRepository.AddAsync(user);

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using MedicalBookingAPI.Entities;
+using MedicalBookingAPI.Helpers;
 using BCrypt.Net;
 
 namespace MedicalBookingAPI.Data;
@@ -31,7 +32,7 @@ public class AppDbContext : DbContext
             entity.HasIndex(u => u.Email).IsUnique();
             entity.Property(u => u.PasswordHash).IsRequired();
             entity.Property(u => u.Role).IsRequired().HasConversion<string>();
-            entity.Property(u => u.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            entity.Property(u => u.CreatedAt).HasDefaultValueSql("GETDATE()");
         });
 
         modelBuilder.Entity<Patient>(entity =>
@@ -76,7 +77,7 @@ public class AppDbContext : DbContext
         {
             entity.HasKey(a => a.AppointmentId);
             entity.Property(a => a.Status).IsRequired().HasConversion<string>();
-            entity.Property(a => a.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            entity.Property(a => a.CreatedAt).HasDefaultValueSql("GETDATE()");
 
             entity.HasOne(a => a.Patient)
                   .WithMany(p => p.Appointments)
@@ -97,7 +98,8 @@ public class AppDbContext : DbContext
             entity.Property(m => m.DoctorDiagnosis).HasMaxLength(2000);
             entity.Property(m => m.Treatment).HasMaxLength(2000);
             entity.Property(m => m.Prescription).HasColumnType("nvarchar(max)");
-            entity.Property(m => m.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            entity.Property(m => m.CreatedAt).HasDefaultValueSql("GETDATE()");
+            entity.Property(m => m.IsEncrypted).HasDefaultValue(false);
 
             entity.HasOne(m => m.Appointment)
                   .WithOne(a => a.MedicalRecord)
@@ -109,8 +111,8 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<ChatSession>(entity =>
         {
-            entity.Property(s => s.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
-            entity.Property(s => s.UpdatedAt).HasDefaultValueSql("GETUTCDATE()");
+            entity.Property(s => s.CreatedAt).HasDefaultValueSql("GETDATE()");
+            entity.Property(s => s.UpdatedAt).HasDefaultValueSql("GETDATE()");
 
             entity.HasOne(s => s.Patient)
                   .WithMany()
@@ -123,7 +125,7 @@ public class AppDbContext : DbContext
             entity.Property(m => m.Content).IsRequired().HasColumnType("nvarchar(max)");
             entity.Property(m => m.Sender).IsRequired().HasConversion<string>();
             entity.Property(m => m.SuggestedSpecialty).HasMaxLength(100);
-            entity.Property(m => m.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            entity.Property(m => m.CreatedAt).HasDefaultValueSql("GETDATE()");
             entity.Property(m => m.IsEncrypted).HasDefaultValue(false);
 
             entity.HasOne(m => m.ChatSession)
@@ -157,7 +159,7 @@ public class AppDbContext : DbContext
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!"),
                 Phone = "1234567890",
                 Role = UserRole.Admin,
-                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                CreatedAt = DateTimeHelper.Now
             }
         );
 
@@ -170,7 +172,7 @@ public class AppDbContext : DbContext
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("Doctor123!"),
                 Phone = "9876543210",
                 Role = UserRole.Doctor,
-                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                CreatedAt = DateTimeHelper.Now
             }
         );
 
@@ -183,7 +185,7 @@ public class AppDbContext : DbContext
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("Patient123!"),
                 Phone = "0123456789",
                 Role = UserRole.Patient,
-                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                CreatedAt = DateTimeHelper.Now
             }
         );
 
@@ -202,7 +204,7 @@ public class AppDbContext : DbContext
             {
                 PatientId = 1,
                 UserId = 3,
-                DateOfBirth = new DateTime(1990, 5, 15, 0, 0, 0, DateTimeKind.Utc),
+                DateOfBirth = DateTimeHelper.Now,
                 Gender = "Male"
             }
         );
