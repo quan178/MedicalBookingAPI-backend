@@ -77,7 +77,41 @@ BƯỚC 3 - GỢI Ý KHOA:
 - Tất cả viết trong MỘT đoạn văn tự nhiên, kết thúc bằng lời dẫn người dùng đến trang đặt lịch thực tế của bệnh viện. Ví dụ: ""Bạn có thể đặt lịch khám tại Khoa [tên khoa] qua trang đặt lịch của bệnh viện để được tư vấn và khám chuyên sâu hơn.""
 
 TRƯỜNG HỢP ĐẶC BIỆT:
-- Triệu chứng nghiêm trọng (đau ngực dữ dội, khó thở nặng, chảy máu...): Cảnh báo khẩn cấp và khuyên đến khám NGAY
+
+TRƯỜNG HỢP NGƯỜI DÙNG MÔ TẢ TRIỆU CHỨNG NGUY CẤP:
+Khi người dùng mô tả các triệu chứng cấp bách như: đau ngực dữ dội, khó thở nặng,
+mất ý thức, đột quỵ, co giật, chảy máu nặng, ngộ độc, tự tử, hôn mê, méo miệng, nói lắp đột ngột, mắt mờ đột ngột, 
+chảy máu nhiều, liệt, liệt nửa người, nhịp tim dừng, huyết áp tụt đột ngột, nôn ra máu, đau thắt ngực hoặc BẤT KỲ
+tình trạng nào có thể đe dọa tính mạng → BẮT BUỘC trả lời theo format:
+
+[EMERGENCY] <Phản hồi khẩn cấp theo mẫu bên dưới>
+
+⚠️ **CẢNH BÁO KHẨN CẤP**
+⚠️ Tình trạng của bạn có thể nguy hiểm đến tính mạng.
+
+**Hành động ngay lập tức:**
+✅ Gọi cấp cứu 115 NGAY
+✅ Gọi người thân hoặc người xung quanh giúp đỡ
+✅ KHÔNG tự ý đi lại nếu cảm thấy yếu
+
+**Nếu bạn đang ở nhà:**
+📞 Gọi 115 và báo địa chỉ chính xác
+📞 Gọi người thân đến hỗ trợ
+🚪 Mở cửa sẵn để nhân viên y tế vào được
+
+**Lưu ý quan trọng:**
+⚠️ KHÔNG tự ý uống thuốc khi chưa có hướng dẫn của bác sĩ
+⚠️ KHÔNG chờ đợi triệu chứng giảm để gọi cấp cứu
+⚠️ Gọi 115 NGAY - đội ngũ y tế sẽ hướng dẫn bạn các bước xử lý
+
+TRƯỜNG HỢP BÌNH THƯỜNG:
+Khi triệu chứng không phải cấp cấp → trả lời bình thường, KHÔNG cần prefix.
+
+QUY TẮC BẮT BUỘC:
+- Nếu triệu chứng THỰC SỰ nguy cấp, đe dọa tính mạng → dùng [EMERGENCY]
+- Phản hồi KHÔNG có [EMERGENCY] → coi như bình thường
+- KHÔNG BAO GIỜ dùng [EMERGENCY] khi không phải trường hợp nguy cấp thực sự
+
 - Triệu chứng không khớp 10 khoa trên: Gợi ý khoa Nội tổng quát, giải thích và mời đặt lịch
 - Người dùng hỏi chung về sức khỏe: Trả lời thông tin, vẫn hỏi câu hỏi làm rõ nếu muốn gợi ý khoa
 
@@ -317,6 +351,11 @@ LUÔN LUÔN:
 
         var responseContent = await CallBeeknoeeApiAsync(conversationHistory.Cast<object>().ToList(), SystemPrompt);
 
+        if (responseContent.StartsWith("[EMERGENCY]", StringComparison.OrdinalIgnoreCase))
+        {
+            return (responseContent, (string?)null, (double?)null);
+        }
+
         var (hasSpecialty, specialty) = TryExtractSpecialtyFromResponse(responseContent);
 
         string? suggestedSpecialty = null;
@@ -421,6 +460,11 @@ LUÔN LUÔN:
                 if (rawText.StartsWith('{') && rawText.Contains("specialty_name"))
                 {
                     return "Tôi đã ghi nhận thông tin của bạn. Để tôi tổng hợp và đưa ra gợi ý chuyên khoa phù hợp nhất nhé.";
+                }
+
+                if (rawText.StartsWith("[EMERGENCY]"))
+                {
+                    return rawText.Substring("[EMERGENCY]".Length).Trim();
                 }
 
                 return rawText.Trim();
