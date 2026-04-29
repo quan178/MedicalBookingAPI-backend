@@ -182,4 +182,63 @@ public class AppointmentsController : ControllerBase
             return BadRequest(ApiResponse.ErrorResponse(ex.Message));
         }
     }
+
+    [HttpGet("admin/all")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<ApiResponse<IEnumerable<AdminAppointmentDto>>>> GetAllAppointments([FromQuery] AppointmentFilterRequest filter)
+    {
+        var appointments = await _appointmentService.GetFilteredAppointmentsAsync(filter);
+        return Ok(ApiResponse<IEnumerable<AdminAppointmentDto>>.SuccessResponse(appointments));
+    }
+
+    [HttpGet("admin/{id}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<ApiResponse<AdminAppointmentDto>>> GetAppointmentDetail(int id)
+    {
+        var appointment = await _appointmentService.GetAppointmentDetailsForAdminAsync(id);
+        if (appointment == null)
+        {
+            return NotFound(ApiResponse<AdminAppointmentDto>.ErrorResponse("Lịch hẹn không tồn tại"));
+        }
+
+        return Ok(ApiResponse<AdminAppointmentDto>.SuccessResponse(appointment));
+    }
+
+    [HttpPut("admin/{id}/status")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<ApiResponse<AdminAppointmentDto>>> AdminUpdateStatus(int id, [FromBody] UpdateAppointmentStatusRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ApiResponse<AdminAppointmentDto>.ErrorResponse("Dữ liệu không hợp lệ"));
+        }
+
+        var updated = await _appointmentService.AdminUpdateStatusAsync(id, request.Status);
+        if (updated == null)
+        {
+            return NotFound(ApiResponse<AdminAppointmentDto>.ErrorResponse("Lịch hẹn không tồn tại"));
+        }
+
+        return Ok(ApiResponse<AdminAppointmentDto>.SuccessResponse(updated, "Cập nhật trạng thái thành công"));
+    }
+
+    [HttpDelete("admin/{id}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<ApiResponse>> AdminCancel(int id)
+    {
+        try
+        {
+            var result = await _appointmentService.AdminCancelAppointmentAsync(id);
+            if (!result)
+            {
+                return NotFound(ApiResponse.ErrorResponse("Lịch hẹn không tồn tại"));
+            }
+
+            return Ok(ApiResponse.SuccessResponse("Hủy lịch hẹn thành công"));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ApiResponse.ErrorResponse(ex.Message));
+        }
+    }
 }

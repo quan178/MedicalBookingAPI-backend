@@ -10,6 +10,7 @@ using MedicalBookingAPI.Repositories;
 using MedicalBookingAPI.Repositories.Interfaces;
 using MedicalBookingAPI.Services.Implementations;
 using MedicalBookingAPI.Services.Interfaces;
+using MedicalBookingAPI.Settings;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -68,8 +69,14 @@ builder.Services.AddSingleton<IChatEncryptionService, ChatEncryptionService>();
 // Register Chat Settings
 builder.Services.Configure<ChatSettings>(builder.Configuration.GetSection("ChatSettings"));
 
+// Register Appointment Settings
+builder.Services.Configure<AppointmentSettings>(builder.Configuration.GetSection("AppointmentSettings"));
+
 // Register Chat Cleanup Background Service
 builder.Services.AddHostedService<ChatSessionCleanupService>();
+
+// Register Appointment Auto-Cancel Background Service
+builder.Services.AddHostedService<AppointmentAutoCancelService>();
 
 // Register HttpClient for Beeknoee AI
 builder.Services.AddHttpClient("BeeknoeeClient", client =>

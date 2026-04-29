@@ -30,3 +30,27 @@ public class UpdateAppointmentStatusRequest
     [Required(ErrorMessage = "Trạng thái không được để trống")]
     public AppointmentStatus Status { get; set; }
 }
+
+public class AppointmentFilterRequest
+{
+    public DateTime? FromDate { get; set; }
+    public DateTime? ToDate { get; set; }
+    public string? Status { get; set; }
+    public int? DoctorId { get; set; }
+    public int? PatientId { get; set; }
+}
+
+public class AdminAppointmentDto
+{
+    public int AppointmentId { get; set; }
+    public int PatientId { get; set; }
+    public string PatientName { get; set; } = string.Empty;
+    public string PatientEmail { get; set; } = string.Empty;
+    public int DoctorId { get; set; }
+    public string DoctorName { get; set; } = string.Empty;
+    public string DepartmentName { get; set; } = string.Empty;
+    public DateTime AppointmentTime { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
+    public bool HasMedicalRecord { get; set; }
+}

@@ -54,6 +54,16 @@ public class AppointmentService : IAppointmentService
             throw new InvalidOperationException("Bác sĩ không tồn tại");
         }
 
+        var existingInDept = await _appointmentRepository.GetActiveAppointmentsByPatientDepartmentDateAsync(
+            patientId, doctor.DepartmentId, request.AppointmentTime.Date);
+        if (existingInDept.Any())
+        {
+            var existing = existingInDept.First();
+            throw new InvalidOperationException(
+                $"Bạn đã có lịch hẹn tại bộ phận '{existing.Doctor?.Department?.DepartmentName}' vào lúc {existing.AppointmentTime:HH:mm} "
+                + $"ngày {existing.AppointmentTime:dd/MM/yyyy}. Vui lòng hủy lịch cũ trước khi đặt lịch mới.");
+        }
+
         if (!await _appointmentRepository.IsTimeSlotAvailableAsync(request.DoctorId, request.AppointmentTime))
         {
             throw new InvalidOperationException("Khung giờ này đã được đặt");
@@ -109,6 +119,49 @@ public class AppointmentService : IAppointmentService
         return appointments.Select(MapToDto);
     }
 
+    public async Task<IEnumerable<AppointmentDto>> GetActiveAppointmentsByPatientDepartmentDateAsync(int patientId, int departmentId, DateTime date)
+    {
+        var appointments = await _appointmentRepository.GetActiveAppointmentsByPatientDepartmentDateAsync(patientId, departmentId, date);
+        return appointments.Select(MapToDto);
+    }
+
+    public async Task<IEnumerable<AdminAppointmentDto>> GetFilteredAppointmentsAsync(AppointmentFilterRequest filter)
+    {
+        var appointments = await _appointmentRepository.GetFilteredAppointmentsAsync(filter);
+        return appointments.Select(MapToAdminDto);
+    }
+
+    public async Task<AdminAppointmentDto?> GetAppointmentDetailsForAdminAsync(int id)
+    {
+        var appointment = await _appointmentRepository.GetAppointmentWithDetailsAsync(id);
+        return appointment == null ? null : MapToAdminDto(appointment);
+    }
+
+    public async Task<AdminAppointmentDto?> AdminUpdateStatusAsync(int id, AppointmentStatus status)
+    {
+        var appointment = await _appointmentRepository.GetAppointmentWithDetailsAsync(id);
+        if (appointment == null) return null;
+
+        appointment.Status = status;
+        await _appointmentRepository.UpdateAsync(appointment);
+        return MapToAdminDto(appointment);
+    }
+
+    public async Task<bool> AdminCancelAppointmentAsync(int id)
+    {
+        var appointment = await _appointmentRepository.GetAppointmentWithDetailsAsync(id);
+        if (appointment == null) return false;
+
+        if (appointment.Status == AppointmentStatus.Completed)
+        {
+            throw new InvalidOperationException("Không thể hủy lịch hẹn đã hoàn thành");
+        }
+
+        appointment.Status = AppointmentStatus.Cancelled;
+        await _appointmentRepository.UpdateAsync(appointment);
+        return true;
+    }
+
     private static AppointmentDto MapToDto(Appointment appointment)
     {
         return new AppointmentDto
@@ -122,6 +175,24 @@ public class AppointmentService : IAppointmentService
             AppointmentTime = appointment.AppointmentTime,
             Status = appointment.Status.ToString(),
             CreatedAt = appointment.CreatedAt
+        };
+    }
+
+    private static AdminAppointmentDto MapToAdminDto(Appointment appointment)
+    {
+        return new AdminAppointmentDto
+        {
+            AppointmentId = appointment.AppointmentId,
+            PatientId = appointment.PatientId,
+            PatientName = appointment.Patient?.User?.FullName ?? string.Empty,
+            PatientEmail = appointment.Patient?.User?.Email ?? string.Empty,
+            DoctorId = appointment.DoctorId,
+            DoctorName = appointment.Doctor?.User?.FullName ?? string.Empty,
+            DepartmentName = appointment.Doctor?.Department?.DepartmentName ?? string.Empty,
+            AppointmentTime = appointment.AppointmentTime,
+            Status = appointment.Status.ToString(),
+            CreatedAt = appointment.CreatedAt,
+            HasMedicalRecord = appointment.MedicalRecord != null
         };
     }
 }

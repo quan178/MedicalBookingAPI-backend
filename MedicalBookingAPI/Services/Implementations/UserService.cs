@@ -1,4 +1,6 @@
 using MedicalBookingAPI.DTOs;
+using MedicalBookingAPI.Entities;
+using MedicalBookingAPI.Helpers;
 using MedicalBookingAPI.Repositories.Interfaces;
 using MedicalBookingAPI.Services.Interfaces;
 
@@ -70,6 +72,27 @@ public class UserService : IUserService
         await _userRepository.UpdateAsync(user);
 
         return MapToUserDetailDto(user);
+    }
+
+    public async Task<UserDto?> CreateUserAsync(CreateUserRequest request)
+    {
+        if (await _userRepository.EmailExistsAsync(request.Email))
+        {
+            return null;
+        }
+
+        var user = new User
+        {
+            FullName = request.FullName,
+            Email = request.Email,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
+            Phone = request.Phone,
+            Role = UserRole.Admin,
+            CreatedAt = DateTimeHelper.Now
+        };
+
+        await _userRepository.AddAsync(user);
+        return MapToUserDto(user);
     }
 
     private static UserDto MapToUserDto(Entities.User user)
