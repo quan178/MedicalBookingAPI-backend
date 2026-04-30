@@ -151,6 +151,8 @@ public class AppDbContext : DbContext
             entity.HasIndex(n => n.UserId);
             entity.HasIndex(n => new { n.UserId, n.IsRead });
         });
+
+        SeedData(modelBuilder);
     }
 
     private static void SeedData(ModelBuilder modelBuilder)
