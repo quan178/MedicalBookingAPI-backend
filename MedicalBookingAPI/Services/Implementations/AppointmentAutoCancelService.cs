@@ -1,6 +1,7 @@
 using MedicalBookingAPI.Entities;
 using MedicalBookingAPI.Helpers;
 using MedicalBookingAPI.Repositories.Interfaces;
+using MedicalBookingAPI.Services.Interfaces;
 using Microsoft.Extensions.Options;
 using MedicalBookingAPI.Settings;
 
@@ -24,8 +25,8 @@ public class AppointmentAutoCancelService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("Appointment Auto-Cancel Service started. Grace period: {GracePeriod} minutes",
-            _settings.AutoCancelGracePeriodMinutes);
+        _logger.LogInformation("Appointment Auto-Cancel Service started. Auto-cancelling pending appointments {Hours} hours after creation",
+            _settings.AutoCancelHoursAfterCreation);
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -39,8 +40,9 @@ public class AppointmentAutoCancelService : BackgroundService
     {
         using var scope = _serviceProvider.CreateScope();
         var repository = scope.ServiceProvider.GetRequiredService<IAppointmentRepository>();
+        var notificationService = scope.ServiceProvider.GetRequiredService<INotificationService>();
 
-        var expired = await repository.GetExpiredPendingAppointmentsAsync(_settings.AutoCancelGracePeriodMinutes);
+        var expired = await repository.GetExpiredPendingAppointmentsAsync(_settings.AutoCancelHoursAfterCreation);
         var expiredList = expired.ToList();
 
         if (expiredList.Count == 0) return;
@@ -51,9 +53,18 @@ public class AppointmentAutoCancelService : BackgroundService
         {
             apt.Status = AppointmentStatus.Cancelled;
             await repository.UpdateAsync(apt);
+
+            var appointmentTimeStr = apt.AppointmentTime.ToString("HH:mm dd/MM/yyyy");
+            await notificationService.SendToUserAsync(
+                apt.Patient!.UserId,
+                "Lịch hẹn tự động bị hủy",
+                $"Lịch khám vào {appointmentTimeStr} đã tự động bị hủy do chưa được xác nhận trong vòng 2 giờ.",
+                NotificationType.AppointmentAutoCancelled,
+                apt.AppointmentId);
+
             _logger.LogInformation(
-                "Appointment {AppointmentId} auto-cancelled. Was scheduled for {AppointmentTime}",
-                apt.AppointmentId, apt.AppointmentTime);
+                "Appointment {AppointmentId} auto-cancelled. Created at {CreatedAt}, was scheduled for {AppointmentTime}",
+                apt.AppointmentId, apt.CreatedAt, apt.AppointmentTime);
         }
     }
 }

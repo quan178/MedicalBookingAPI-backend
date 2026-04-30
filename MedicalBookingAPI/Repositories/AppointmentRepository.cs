@@ -77,14 +77,14 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<Appointment>> GetExpiredPendingAppointmentsAsync(int gracePeriodMinutes)
+    public async Task<IEnumerable<Appointment>> GetExpiredPendingAppointmentsAsync(int hoursAfterCreation)
     {
-        var cutoff = DateTimeHelper.Now.AddMinutes(-gracePeriodMinutes);
+        var cutoff = DateTimeHelper.Now.AddHours(-hoursAfterCreation);
         return await _dbSet
             .Include(a => a.Patient).ThenInclude(p => p.User)
             .Include(a => a.Doctor).ThenInclude(d => d.User)
             .Where(a => a.Status == AppointmentStatus.Pending
-                        && a.AppointmentTime < cutoff)
+                        && a.CreatedAt < cutoff)
             .ToListAsync();
     }
 

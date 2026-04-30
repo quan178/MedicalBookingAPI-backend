@@ -12,15 +12,18 @@ public class AppointmentService : IAppointmentService
     private readonly IAppointmentRepository _appointmentRepository;
     private readonly IPatientRepository _patientRepository;
     private readonly IDoctorRepository _doctorRepository;
+    private readonly INotificationService _notificationService;
 
     public AppointmentService(
         IAppointmentRepository appointmentRepository,
         IPatientRepository patientRepository,
-        IDoctorRepository doctorRepository)
+        IDoctorRepository doctorRepository,
+        INotificationService notificationService)
     {
         _appointmentRepository = appointmentRepository;
         _patientRepository = patientRepository;
         _doctorRepository = doctorRepository;
+        _notificationService = notificationService;
     }
 
     public async Task<IEnumerable<AppointmentDto>> GetAppointmentsByPatientAsync(int patientId)
@@ -81,23 +84,56 @@ public class AppointmentService : IAppointmentService
         await _appointmentRepository.AddAsync(appointment);
         appointment.Doctor = doctor;
 
+        var patient = await _patientRepository.GetPatientWithUserAsync(patientId);
+        var patientName = patient?.User?.FullName ?? "Bệnh nhân";
+        var appointmentTimeStr = appointment.AppointmentTime.ToString("HH:mm dd/MM/yyyy");
+        await _notificationService.SendToUserAsync(
+            doctor.UserId,
+            "Lịch hẹn mới",
+            $"Bệnh nhân {patientName} vừa đặt lịch khám vào {appointmentTimeStr}.",
+            NotificationType.AppointmentCreated,
+            appointment.AppointmentId);
+
         return MapToDto(appointment);
     }
 
     public async Task<AppointmentDto?> UpdateAppointmentStatusAsync(int id, AppointmentStatus status)
     {
-        var appointment = await _appointmentRepository.GetByIdAsync(id);
+        var appointment = await _appointmentRepository.GetAppointmentWithDetailsAsync(id);
         if (appointment == null) return null;
 
         appointment.Status = status;
         await _appointmentRepository.UpdateAsync(appointment);
+
+        var appointmentTimeStr = appointment.AppointmentTime.ToString("HH:mm dd/MM/yyyy");
+        var doctorName = appointment.Doctor?.User?.FullName ?? "Bác sĩ";
+        var patientName = appointment.Patient?.User?.FullName ?? "Bệnh nhân";
+
+        if (status == AppointmentStatus.Confirmed)
+        {
+            await _notificationService.SendToUserAsync(
+                appointment.Patient!.UserId,
+                "Lịch hẹn được xác nhận",
+                $"Bác sĩ {doctorName} đã xác nhận lịch khám của bạn vào {appointmentTimeStr}.",
+                NotificationType.AppointmentConfirmed,
+                appointment.AppointmentId);
+        }
+        else if (status == AppointmentStatus.Cancelled)
+        {
+            await _notificationService.SendToUserAsync(
+                appointment.Patient.UserId,
+                "Lịch hẹn đã bị hủy",
+                $"Bác sĩ {doctorName} đã hủy lịch khám vào {appointmentTimeStr}.",
+                NotificationType.AppointmentCancelled,
+                appointment.AppointmentId);
+        }
 
         return MapToDto(appointment);
     }
 
     public async Task<bool> CancelAppointmentAsync(int id, int patientId)
     {
-        var appointment = await _appointmentRepository.GetByIdAsync(id);
+        var appointment = await _appointmentRepository.GetAppointmentWithDetailsAsync(id);
         if (appointment == null || appointment.PatientId != patientId)
         {
             return false;
@@ -110,6 +146,16 @@ public class AppointmentService : IAppointmentService
 
         appointment.Status = AppointmentStatus.Cancelled;
         await _appointmentRepository.UpdateAsync(appointment);
+
+        var appointmentTimeStr = appointment.AppointmentTime.ToString("HH:mm dd/MM/yyyy");
+        var patientName = appointment.Patient?.User?.FullName ?? "Bệnh nhân";
+        await _notificationService.SendToUserAsync(
+            appointment.Doctor!.UserId,
+            "Lịch hẹn bị hủy",
+            $"Bệnh nhân {patientName} đã hủy lịch khám vào {appointmentTimeStr}.",
+            NotificationType.AppointmentCancelled,
+            appointment.AppointmentId);
+
         return true;
     }
 
