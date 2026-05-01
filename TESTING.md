@@ -3,7 +3,7 @@
 > Bộ tài liệu test đầy đủ cho hệ thống API đặt lịch khám bệnh viện
 > ASP.NET Core 8.0 + Entity Framework Core + SQL Server
 > Base URL: `http://localhost:5220`
-> Cập nhật: 2026-04-12
+> Cập nhật: 2026-04-30
 
 ---
 
@@ -17,9 +17,10 @@
 6. [API Bác sĩ — Doctors](#6-api-bác-sĩ--doctors)
 7. [API Người dùng — Users](#7-api-người-dùng--users)
 8. [API Lịch hẹn — Appointments](#8-api-lịch-hẹn--appointments)
-9. [API Hồ sơ bệnh án — Medical Records](#9-api-hồ-sơ-bệnh-án--medical-records)
-10. [Danh sách HTTP Status Codes](#10-danh-sách-http-status-codes)
-11. [API AI Chat — AI Chat](#11-api-ai-chat--ai-chat)
+9. [API Hồ sơ bệnh án — Medical Records](#10-api-hồ-sơ-bệnh-án--medical-records)
+10. [API AI Chat — AI Chat](#11-api-ai-chat--ai-chat)
+11. [API Thông báo — Notifications](#13-api-thông-báo--notifications)
+12. [Danh sách HTTP Status Codes](#14-danh-sách-http-status-codes)
 
 ---
 
@@ -923,7 +924,62 @@ Authorization: Bearer <token>
 
 ---
 
-### 7.5 Xóa người dùng
+### 7.5 Tạo tài khoản Admin
+
+**POST** `/api/Users`
+
+#### Auth
+
+`[Authorize(Roles = "Admin")]`
+
+#### Request Body
+
+```json
+{
+  "email": "admin2",
+  "password": "admin123",
+  "fullName": "Admin Two",
+  "phone": "0901234567"
+}
+```
+
+| Trường | Kiểu | Bắt buộc | Mô tả |
+|--------|------|---------|-------|
+| `email` | string | ✅ | Email hợp lệ, duy nhất |
+| `password` | string | ✅ | Tối thiểu 6 ký tự |
+| `fullName` | string | ✅ | Họ tên (2-100 ký tự) |
+| `phone` | string | ❌ | Số điện thoại |
+
+#### Response 200
+
+```json
+{
+  "success": true,
+  "message": "Tạo tài khoản Admin thành công",
+  "data": {
+    "userId": 10,
+    "fullName": "Admin Two",
+    "email": "admin2",
+    "phone": "0901234567",
+    "role": "Admin",
+    "createdAt": "2026-04-30T10:00:00"
+  }
+}
+```
+
+#### Response 400
+
+```json
+{
+  "success": false,
+  "message": "Email đã tồn tại",
+  "data": null
+}
+```
+
+---
+
+### 7.6 Xóa người dùng
 
 **DELETE** `/api/Users/{id}`
 
@@ -1297,7 +1353,201 @@ GET /api/Appointments/doctor/schedule?date=2026-03-26
 
 ---
 
-## 9. API Hồ sơ bệnh án — Medical Records
+### 8.8 Lấy tất cả lịch hẹn (Admin)
+
+**GET** `/api/Appointments/admin/all`
+
+#### Auth
+
+`[Authorize(Roles = "Admin")]`
+
+#### Query Parameters (tất cả optional)
+
+| Tham số | Kiểu | Mô tả |
+|---------|------|-------|
+| `fromDate` | datetime | Lọc từ ngày (format: `YYYY-MM-DD`) |
+| `toDate` | datetime | Lọc đến ngày (format: `YYYY-MM-DD`) |
+| `status` | string | Lọc theo trạng thái (`Pending`, `Confirmed`, `Completed`, `Cancelled`) |
+| `doctorId` | int | Lọc theo ID bác sĩ |
+| `patientId` | int | Lọc theo ID bệnh nhân |
+
+#### Ví dụ
+
+```
+GET /api/Appointments/admin/all?status=Pending&fromDate=2026-04-01
+```
+
+#### Response 200
+
+```json
+{
+  "success": true,
+  "message": "Thao tác thành công",
+  "data": [
+    {
+      "appointmentId": 1,
+      "patientId": 1,
+      "patientName": "Patient One",
+      "patientEmail": "patient1",
+      "doctorId": 1,
+      "doctorName": "Dr. John Smith",
+      "departmentName": "Khoa Nội tổng hợp",
+      "appointmentTime": "2026-04-15T09:00:00",
+      "status": "Pending",
+      "createdAt": "2026-04-10T14:00:00",
+      "hasMedicalRecord": false
+    }
+  ]
+}
+```
+
+---
+
+### 8.9 Lấy chi tiết lịch hẹn (Admin)
+
+**GET** `/api/Appointments/admin/{id}`
+
+#### Auth
+
+`[Authorize(Roles = "Admin")]`
+
+#### Path Parameters
+
+| Tham số | Kiểu | Mô tả |
+|---------|------|-------|
+| `id` | int | ID lịch hẹn |
+
+#### Response 200
+
+```json
+{
+  "success": true,
+  "message": "Thao tác thành công",
+  "data": {
+    "appointmentId": 1,
+    "patientId": 1,
+    "patientName": "Patient One",
+    "patientEmail": "patient1",
+    "doctorId": 1,
+    "doctorName": "Dr. John Smith",
+    "departmentName": "Khoa Nội tổng hợp",
+    "appointmentTime": "2026-04-15T09:00:00",
+    "status": "Confirmed",
+    "createdAt": "2026-04-10T14:00:00",
+    "hasMedicalRecord": true
+  }
+}
+```
+
+#### Response 404
+
+```json
+{
+  "success": false,
+  "message": "Lịch hẹn không tồn tại",
+  "data": null
+}
+```
+
+---
+
+### 8.10 Cập nhật trạng thái lịch hẹn (Admin)
+
+**PUT** `/api/Appointments/admin/{id}/status`
+
+#### Auth
+
+`[Authorize(Roles = "Admin")]`
+
+#### Path Parameters
+
+| Tham số | Kiểu | Mô tả |
+|---------|------|-------|
+| `id` | int | ID lịch hẹn |
+
+#### Request Body
+
+```json
+{
+  "status": "Completed"
+}
+```
+
+| Trường | Kiểu | Bắt buộc | Mô tả |
+|--------|------|---------|-------|
+| `status` | AppointmentStatus | ✅ | `Pending`, `Confirmed`, `Completed`, `Cancelled` |
+
+#### Response 200
+
+```json
+{
+  "success": true,
+  "message": "Cập nhật trạng thái thành công",
+  "data": {
+    "appointmentId": 1,
+    "patientId": 1,
+    "patientName": "Patient One",
+    "patientEmail": "patient1",
+    "doctorId": 1,
+    "doctorName": "Dr. John Smith",
+    "departmentName": "Khoa Nội tổng hợp",
+    "appointmentTime": "2026-04-15T09:00:00",
+    "status": "Completed",
+    "createdAt": "2026-04-10T14:00:00",
+    "hasMedicalRecord": true
+  }
+}
+```
+
+#### Response 404
+
+```json
+{
+  "success": false,
+  "message": "Lịch hẹn không tồn tại",
+  "data": null
+}
+```
+
+---
+
+### 8.11 Hủy lịch hẹn (Admin)
+
+**DELETE** `/api/Appointments/admin/{id}`
+
+#### Auth
+
+`[Authorize(Roles = "Admin")]`
+
+#### Path Parameters
+
+| Tham số | Kiểu | Mô tả |
+|---------|------|-------|
+| `id` | int | ID lịch hẹn |
+
+#### Response 200
+
+```json
+{
+  "success": true,
+  "message": "Hủy lịch hẹn thành công",
+  "data": null
+}
+```
+
+#### Response 404
+
+```json
+{
+  "success": false,
+  "message": "Lịch hẹn không tồn tại",
+  "data": null
+}
+```
+
+---
+
+## 10. API Hồ sơ bệnh án — Medical Records
 
 > **Base**: `/api/MedicalRecords`
 > **Auth**: Yêu cầu đăng nhập (Patient, Doctor)
@@ -1539,7 +1789,7 @@ GET /api/Appointments/doctor/schedule?date=2026-03-26
 
 ---
 
-## 10. API AI Chat — AI Chat
+## 11. API AI Chat — AI Chat
 
 > **Base**: `/api/AI/chat`
 > **Auth**: Yêu cầu đăng nhập (Patient)
@@ -1809,7 +2059,159 @@ GET /api/Appointments/doctor/schedule?date=2026-03-26
 
 ---
 
-## 11. Danh sách HTTP Status Codes
+## 12. API Thông báo — Notifications
+
+> **Base**: `/api/notifications`
+> **Auth**: Yêu cầu đăng nhập (tất cả vai trò)
+
+---
+
+### Loại thông báo
+
+| Giá trị | Mô tả | Người nhận |
+|---------|-------|------------|
+| `AppointmentCreated` | Có lịch hẹn mới | Bác sĩ |
+| `AppointmentConfirmed` | Lịch hẹn được xác nhận | Bệnh nhân |
+| `AppointmentCancelled` | Lịch hẹn bị hủy | Cả hai |
+| `AppointmentAutoCancelled` | Lịch hẹn tự động bị hủy | Bệnh nhân |
+| `AppointmentCompleted` | Lịch khám hoàn thành | Bệnh nhân |
+
+---
+
+### 12.1 Lấy danh sách thông báo của user hiện tại
+
+**GET** `/api/notifications`
+
+#### Auth
+
+`[Authorize]` — Tất cả vai trò đã đăng nhập
+
+#### Response 200
+
+```json
+{
+  "success": true,
+  "message": null,
+  "data": [
+    {
+      "notificationId": 1,
+      "title": "Lịch hẹn mới",
+      "message": "Bệnh nhân Đỗ Minh Quân vừa đặt lịch khám vào 14:00 01/05/2026.",
+      "type": "AppointmentCreated",
+      "relatedId": 5,
+      "isRead": false,
+      "createdAt": "2026-04-30T14:00:00"
+    }
+  ]
+}
+```
+
+| Trường | Kiểu | Mô tả |
+|--------|------|-------|
+| `notificationId` | int | ID thông báo |
+| `title` | string | Tiêu đề thông báo |
+| `message` | string | Nội dung chi tiết |
+| `type` | string | Loại thông báo |
+| `relatedId` | int? | AppointmentId liên quan |
+| `isRead` | bool | Đã đọc hay chưa |
+| `createdAt` | datetime | Thời gian tạo |
+
+---
+
+### 12.2 Lấy số thông báo chưa đọc
+
+**GET** `/api/notifications/unread-count`
+
+#### Auth
+
+`[Authorize]` — Tất cả vai trò đã đăng nhập
+
+#### Response 200
+
+```json
+{
+  "success": true,
+  "message": null,
+  "data": {
+    "count": 3
+  }
+}
+```
+
+---
+
+### 12.3 Đánh dấu một thông báo là đã đọc
+
+**PUT** `/api/notifications/{id}/read`
+
+#### Auth
+
+`[Authorize]` — Tất cả vai trò đã đăng nhập
+
+#### Path Parameters
+
+| Tham số | Kiểu | Mô tả |
+|---------|------|-------|
+| `id` | int | ID thông báo |
+
+#### Response 200
+
+```json
+{
+  "success": true,
+  "message": "Đã đánh dấu là đã đọc",
+  "data": null
+}
+```
+
+---
+
+### 12.4 Đánh dấu tất cả thông báo là đã đọc
+
+**PUT** `/api/notifications/read-all`
+
+#### Auth
+
+`[Authorize]` — Tất cả vai trò đã đăng nhập
+
+#### Response 200
+
+```json
+{
+  "success": true,
+  "message": "Đã đánh dấu tất cả là đã đọc",
+  "data": null
+}
+```
+
+---
+
+### SignalR Hub — Real-time Notifications
+
+**Endpoint:** `/hubs/notifications`
+**Auth:** Truyền JWT token qua query string: `/hubs/notifications?access_token=<token>`
+
+#### Cách sử dụng
+
+```javascript
+// 1. Kết nối đến hub với token
+const hubConnection = new signalR.HubConnectionBuilder()
+    .withUrl("/hubs/notifications", { accessTokenFactory: () => jwtToken })
+    .build();
+
+// 2. Join group theo userId
+await hubConnection.invoke("JoinUserGroup", userId);
+
+// 3. Lắng nghe thông báo mới
+hubConnection.on("ReceiveNotification", (notification) => {
+    console.log("Thông báo mới:", notification);
+    // Hiển thị toast / cập nhật badge
+});
+```
+
+---
+
+## 13. Danh sách HTTP Status Codes
 
 | Status Code | Mô tả |
 |-------------|-------|
@@ -1858,6 +2260,26 @@ Invoke-RestMethod -Uri "http://localhost:5220/api/Appointments" `
     -ContentType "application/json" `
     -Headers @{ "Authorization" = "Bearer $token" } `
     -Body '{"doctorId":1,"appointmentTime":"2026-03-27T10:00:00"}'
+
+# 7. Lấy danh sách thông báo
+Invoke-RestMethod -Uri "http://localhost:5220/api/notifications" `
+    -Method GET `
+    -Headers @{ "Authorization" = "Bearer $token" }
+
+# 8. Lấy số thông báo chưa đọc
+Invoke-RestMethod -Uri "http://localhost:5220/api/notifications/unread-count" `
+    -Method GET `
+    -Headers @{ "Authorization" = "Bearer $token" }
+
+# 9. Đánh dấu thông báo đã đọc
+Invoke-RestMethod -Uri "http://localhost:5220/api/notifications/1/read" `
+    -Method PUT `
+    -Headers @{ "Authorization" = "Bearer $token" }
+
+# 10. Đánh dấu tất cả thông báo đã đọc
+Invoke-RestMethod -Uri "http://localhost:5220/api/notifications/read-all" `
+    -Method PUT `
+    -Headers @{ "Authorization" = "Bearer $token" }
 ```
 
 ---
@@ -1904,6 +2326,22 @@ curl -X PUT http://localhost:5220/api/MedicalRecords/1 \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{"doctorDiagnosis":"Cảm cúm (cập nhật)","treatment":"Nghỉ ngơi, bổ sung vitamin"}'
+
+# 9. Lấy danh sách thông báo
+curl http://localhost:5220/api/notifications \
+  -H "Authorization: Bearer $TOKEN"
+
+# 10. Lấy số thông báo chưa đọc
+curl http://localhost:5220/api/notifications/unread-count \
+  -H "Authorization: Bearer $TOKEN"
+
+# 11. Đánh dấu thông báo đã đọc
+curl -X PUT http://localhost:5220/api/notifications/1/read \
+  -H "Authorization: Bearer $TOKEN"
+
+# 12. Đánh dấu tất cả thông báo đã đọc
+curl -X PUT http://localhost:5220/api/notifications/read-all \
+  -H "Authorization: Bearer $TOKEN"
 ```
 
 ---
@@ -1934,27 +2372,40 @@ curl -X PUT http://localhost:5220/api/MedicalRecords/1 \
 | 16 | PUT | `/api/Users/me` | ✅ | Tất cả |
 | 17 | GET | `/api/Users` | ✅ | Admin |
 | 18 | GET | `/api/Users/{id}` | ✅ | Admin |
-| 19 | DELETE | `/api/Users/{id}` | ✅ | Admin |
+| 19 | POST | `/api/Users` | ✅ | Admin |
+| 20 | DELETE | `/api/Users/{id}` | ✅ | Admin |
 | | | **Appointments** | | |
-| 20 | GET | `/api/Appointments/patient` | ✅ | Patient |
-| 21 | GET | `/api/Appointments/doctor` | ✅ | Doctor |
-| 22 | GET | `/api/Appointments/doctor/schedule?date=` | ✅ | Doctor |
-| 23 | GET | `/api/Appointments/{id}` | ✅ | Tất cả |
-| 24 | POST | `/api/Appointments` | ✅ | Patient |
-| 25 | PUT | `/api/Appointments/{id}/status` | ✅ | Doctor |
-| 26 | DELETE | `/api/Appointments/{id}` | ✅ | Patient |
+| 21 | GET | `/api/Appointments/patient` | ✅ | Patient |
+| 22 | GET | `/api/Appointments/doctor` | ✅ | Doctor |
+| 23 | GET | `/api/Appointments/doctor/schedule?date=` | ✅ | Doctor |
+| 24 | GET | `/api/Appointments/{id}` | ✅ | Tất cả |
+| 25 | POST | `/api/Appointments` | ✅ | Patient |
+| 26 | PUT | `/api/Appointments/{id}/status` | ✅ | Doctor |
+| 27 | DELETE | `/api/Appointments/{id}` | ✅ | Patient |
+| | | **Appointments (Admin)** | | |
+| 28 | GET | `/api/Appointments/admin/all` | ✅ | Admin |
+| 29 | GET | `/api/Appointments/admin/{id}` | ✅ | Admin |
+| 30 | PUT | `/api/Appointments/admin/{id}/status` | ✅ | Admin |
+| 31 | DELETE | `/api/Appointments/admin/{id}` | ✅ | Admin |
 | | | **MedicalRecords** | | |
-| 27 | GET | `/api/MedicalRecords/patient` | ✅ | Patient |
-| 28 | GET | `/api/MedicalRecords/doctor` | ✅ | Doctor |
-| 29 | GET | `/api/MedicalRecords/{id}` | ✅ | Tất cả |
-| 30 | POST | `/api/MedicalRecords` | ✅ | Doctor |
-| 31 | PUT | `/api/MedicalRecords/{id}` | ✅ | Doctor |
+| 32 | GET | `/api/MedicalRecords/patient` | ✅ | Patient |
+| 33 | GET | `/api/MedicalRecords/doctor` | ✅ | Doctor |
+| 34 | GET | `/api/MedicalRecords/{id}` | ✅ | Tất cả |
+| 35 | POST | `/api/MedicalRecords` | ✅ | Doctor |
+| 36 | PUT | `/api/MedicalRecords/{id}` | ✅ | Doctor |
 | | | **AI Chat** | | |
-| 32 | POST | `/api/AI/chat/sessions` | ✅ | Patient |
-| 33 | GET | `/api/AI/chat/sessions` | ✅ | Patient |
-| 34 | GET | `/api/AI/chat/sessions/{sessionId}` | ✅ | Patient |
-| 35 | POST | `/api/AI/chat/sessions/{sessionId}/message` | ✅ | Patient |
-| 36 | DELETE | `/api/AI/chat/sessions/{sessionId}` | ✅ | Patient |
+| 37 | POST | `/api/AI/chat/sessions` | ✅ | Patient |
+| 38 | GET | `/api/AI/chat/sessions` | ✅ | Patient |
+| 39 | GET | `/api/AI/chat/sessions/{sessionId}` | ✅ | Patient |
+| 40 | POST | `/api/AI/chat/sessions/{sessionId}/message` | ✅ | Patient |
+| 41 | DELETE | `/api/AI/chat/sessions/{sessionId}` | ✅ | Patient |
+| | | **Notifications** | | |
+| 42 | GET | `/api/notifications` | ✅ | Tất cả |
+| 43 | GET | `/api/notifications/unread-count` | ✅ | Tất cả |
+| 44 | PUT | `/api/notifications/{id}/read` | ✅ | Tất cả |
+| 45 | PUT | `/api/notifications/read-all` | ✅ | Tất cả |
+| | | **SignalR Hub** | | |
+| 46 | WS | `/hubs/notifications` | ✅ | Tất cả |
 
 ---
 

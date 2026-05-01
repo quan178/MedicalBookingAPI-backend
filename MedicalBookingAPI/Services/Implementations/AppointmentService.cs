@@ -127,6 +127,15 @@ public class AppointmentService : IAppointmentService
                 NotificationType.AppointmentCancelled,
                 appointment.AppointmentId);
         }
+        else if (status == AppointmentStatus.Completed)
+        {
+            await _notificationService.SendToUserAsync(
+                appointment.Patient!.UserId,
+                "Lịch hẹn hoàn thành",
+                $"Bác sĩ {doctorName} đã hoàn thành lịch khám của bạn vào {appointmentTimeStr}.",
+                NotificationType.AppointmentCompleted,
+                appointment.AppointmentId);
+        }
 
         return MapToDto(appointment);
     }
@@ -190,6 +199,42 @@ public class AppointmentService : IAppointmentService
 
         appointment.Status = status;
         await _appointmentRepository.UpdateAsync(appointment);
+
+        var appointmentTimeStr = appointment.AppointmentTime.ToString("HH:mm dd/MM/yyyy");
+        var patientName = appointment.Patient?.User?.FullName ?? "Bệnh nhân";
+        var doctorName = appointment.Doctor?.User?.FullName ?? "Bác sĩ";
+
+        if (status == AppointmentStatus.Confirmed)
+        {
+            await _notificationService.SendToUserAsync(
+                appointment.Patient!.UserId,
+                "Lịch hẹn được xác nhận",
+                $"Quản trị viên đã xác nhận lịch khám của bạn vào {appointmentTimeStr} với bác sĩ {doctorName}.",
+                NotificationType.AppointmentConfirmed,
+                appointment.AppointmentId);
+            await _notificationService.SendToUserAsync(
+                appointment.Doctor!.UserId,
+                "Lịch hẹn được xác nhận",
+                $"Quản trị viên đã xác nhận lịch khám của bệnh nhân {patientName} vào {appointmentTimeStr}.",
+                NotificationType.AppointmentConfirmed,
+                appointment.AppointmentId);
+        }
+        else if (status == AppointmentStatus.Cancelled)
+        {
+            await _notificationService.SendToUserAsync(
+                appointment.Patient!.UserId,
+                "Lịch hẹn bị hủy",
+                $"Quản trị viên đã hủy lịch khám vào {appointmentTimeStr}.",
+                NotificationType.AppointmentCancelled,
+                appointment.AppointmentId);
+            await _notificationService.SendToUserAsync(
+                appointment.Doctor!.UserId,
+                "Lịch hẹn bị hủy",
+                $"Quản trị viên đã hủy lịch khám của bệnh nhân {patientName} vào {appointmentTimeStr}.",
+                NotificationType.AppointmentCancelled,
+                appointment.AppointmentId);
+        }
+
         return MapToAdminDto(appointment);
     }
 
@@ -205,6 +250,24 @@ public class AppointmentService : IAppointmentService
 
         appointment.Status = AppointmentStatus.Cancelled;
         await _appointmentRepository.UpdateAsync(appointment);
+
+        var appointmentTimeStr = appointment.AppointmentTime.ToString("HH:mm dd/MM/yyyy");
+        var patientName = appointment.Patient?.User?.FullName ?? "Bệnh nhân";
+        var doctorName = appointment.Doctor?.User?.FullName ?? "Bác sĩ";
+
+        await _notificationService.SendToUserAsync(
+            appointment.Patient!.UserId,
+            "Lịch hẹn bị hủy",
+            $"Quản trị viên đã hủy lịch khám vào {appointmentTimeStr}.",
+            NotificationType.AppointmentCancelled,
+            appointment.AppointmentId);
+        await _notificationService.SendToUserAsync(
+            appointment.Doctor!.UserId,
+            "Lịch hẹn bị hủy",
+            $"Quản trị viên đã hủy lịch khám của bệnh nhân {patientName} vào {appointmentTimeStr}.",
+            NotificationType.AppointmentCancelled,
+            appointment.AppointmentId);
+
         return true;
     }
 
